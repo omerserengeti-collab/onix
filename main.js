@@ -225,6 +225,16 @@ function createSettingsWindow() {
 
   settingsWindow.on('closed', () => {
     settingsWindow = null;
+    // Show popup after settings closes
+    if (popupWindow && !popupWindow.isDestroyed()) {
+      const trayBounds = tray.getBounds();
+      popupWindow.setPosition(
+        Math.round(trayBounds.x + trayBounds.width / 2 - 172),
+        trayBounds.y + trayBounds.height
+      );
+      popupWindow.show();
+      popupWindow.focus();
+    }
   });
 }
 
