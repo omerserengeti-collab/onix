@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Onix</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="card" id="card">
+    <!-- Update Banner (hidden by default) -->
+    <div class="update-banner" id="updateBanner" style="display:none;">
+      <span class="update-text" id="updateText">Update available</span>
+      <button class="update-btn" id="updateBtn">Restart</button>
+    </div>
+
+    <!-- Toggle Row -->
+    <div class="toggle-row">
+      <span class="toggle-label">Listening</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="toggleListening">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <!-- Mic + Waveform (hidden when OFF) -->
+    <div class="mic-section" id="micSection" style="display:none;">
+      <div class="mic-header">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9FD25D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+        </svg>
+        <select class="mic-select" id="micSelect">
+          <option value="">Loading...</option>
+        </select>
+      </div>
+      <div class="waveform-wrap">
+        <canvas id="waveformCanvas" width="320" height="64"></canvas>
+      </div>
+    </div>
+
+    <!-- Settings Row -->
+    <div class="settings-row" id="settingsBtn">
+      <span class="settings-label">Settings</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Countdown overlay -->
+  <div class="countdown-overlay" id="countdownOverlay" style="display:none;">
+    <div class="countdown-card">
+      <div class="countdown-text">Starting in</div>
+      <div class="countdown-number" id="countdownNumber">5</div>
+      <div class="countdown-hint">Clap twice to trigger!</div>
+    </div>
+  </div>
+
+  <!-- Paywall (hidden by default) -->
+  <div class="paywall-card" id="paywallCard" style="display:none;">
+    <img src="../assets/onix-logo.png" class="pw-logo" alt="Onix">
+    <div class="pw-step">
+      <div class="pw-step-badge done">&#x2713;</div>
+      <div class="pw-step-content">
+        <div class="pw-step-title">Hardware check</div>
+        <div class="pw-check ok">&#x25CF; Microphone OK &mdash; you're good to go!</div>
+      </div>
+    </div>
+    <div class="pw-step">
+      <div class="pw-step-badge">2</div>
+      <div class="pw-step-content">
+        <div class="pw-step-title">Activate license</div>
+        <button class="pw-buy-btn" id="paywallBuyBtn">&#x1F6D2; Buy a License &mdash; $7.99</button>
+        <div class="pw-key-section">
+          <div class="pw-key-label">Already have a key?</div>
+          <div class="pw-key-row">
+            <input type="text" id="paywallKeyInput" class="pw-key-input" placeholder="Paste license key">
+            <button class="pw-activate-btn" id="paywallActivateBtn">Activate</button>
+          </div>
+          <p class="pw-status" id="paywallStatus"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Install Onix — Mac Setup Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: #f8f9fa;
+            color: #111;
+            line-height: 1.6;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #4F46E5, #7C3AED);
+            color: white;
+            text-align: center;
+            padding: 60px 20px 40px;
+        }
+        .hero h1 { font-size: 2.5rem; margin-bottom: 10px; }
+        .hero p { font-size: 1.1rem; opacity: 0.9; max-width: 500px; margin: 0 auto; }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .notice {
+            background: #FEF3C7;
+            border: 2px solid #F59E0B;
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 40px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .notice-icon { font-size: 1.5rem; }
+        .notice-text { font-size: 0.95rem; }
+        .notice-text strong { color: #92400E; }
+
+        .download-btn {
+            display: block;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 50px;
+            padding: 16px 32px;
+            background: #4F46E5;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .download-btn:hover { background: #4338CA; }
+        .download-btn span { font-size: 0.85rem; opacity: 0.8; display: block; margin-top: 4px; font-weight: 400; }
+
+        .steps-title {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .steps-subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .step {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid #e5e7eb;
+        }
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+        .step-number {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #4F46E5;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        .step-title { font-size: 1.1rem; font-weight: 600; }
+        .step-desc {
+            color: #555;
+            font-size: 0.95rem;
+            margin-bottom: 16px;
+            padding-left: 50px;
+        }
+        .step-image {
+            width: 100%;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+
+        .step-drag {
+            background: #F3F4F6;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            margin-top: 8px;
+        }
+        .step-drag .icons {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+        .step-drag p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .done-box {
+            background: linear-gradient(135deg, #ECFDF5, #D1FAE5);
+            border: 2px solid #10B981;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            margin-top: 40px;
+        }
+        .done-box h3 { color: #065F46; font-size: 1.3rem; margin-bottom: 8px; }
+        .done-box p { color: #047857; }
+
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+            font-size: 0.85rem;
+        }
+
+        .platform-note {
+            text-align: center;
+            margin-top: 12px;
+            font-size: 0.85rem;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hero">
+        <h1>Onix</h1>
+        <p>Clap to launch your apps. Install in 2 minutes.</p>
+    </div>
+
+    <div class="container">
+
+        <div class="notice">
+            <div class="notice-icon">&#x26A0;&#xFE0F;</div>
+            <div class="notice-text">
+                <strong>Mac users:</strong> Apple will show a security warning because Onix isn't from the App Store yet.
+                Don't worry — follow the 3 simple steps below after downloading. Takes 30 seconds.
+            </div>
+        </div>
+
+        <a href="Onix-1.0.0-arm64.dmg" class="download-btn" id="downloadBtn">
+            Download Onix for Mac
+            <span>v1.0.0 &middot; macOS 12+ &middot; Apple Silicon</span>
+        </a>
+
+        <p class="platform-note">Windows version coming soon</p>
+
+        <h2 class="steps-title">Setup Guide for Mac</h2>
+        <p class="steps-subtitle">Follow these steps after downloading (first time only)</p>
+
+        <!-- Step 1 -->
+        <div class="step">
+            <div class="step-header">
+                <div class="step-number">1</div>
+                <div class="step-title">Open the DMG and drag to Applications</div>
+            </div>
+            <div class="step-desc">
+                Double-click the downloaded file and drag the Onix icon into your Applications folder.
+            </div>
+            <div class="step-drag">
+                <div class="icons">&#x1F4E6; &#x27A1;&#xFE0F; &#x1F4C1;</div>
+                <p>Drag Onix.app &rarr; Applications</p>
+            </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step">
+            <div class="step-header">
+                <div class="step-number">2</div>
+                <div class="step-title">Open Onix — you'll see a warning. That's OK!</div>
+            </div>
+            <div class="step-desc">
+                Apple will say it can't verify the app. Click <strong>"Done"</strong> (not "Move to Trash").
+                Then go to <strong>System Settings &rarr; Privacy & Security</strong> and scroll down.
+            </div>
+            <img src="step1-privacy.png" alt="Go to Privacy and Security" class="step-image">
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step">
+            <div class="step-header">
+                <div class="step-number">3</div>
+                <div class="step-title">Click "Open Anyway"</div>
+            </div>
+            <div class="step-desc">
+                You'll see <strong>"Onix was blocked to protect your Mac"</strong> with an
+                <strong>"Open Anyway"</strong> button. Click it, enter your password, and you're done!
+            </div>
+            <img src="step2-open-anyway.png" alt="Click Open Anyway" class="step-image">
+        </div>
+
+        <div class="done-box">
+            <h3>&#x1F389; That's it!</h3>
+            <p>Onix is now installed. This process is only needed once.<br>
+            Next time, just double-click to open.</p>
+        </div>
+
+    </div>
+
+    <div class="footer">
+        Onix v1.0.0 &middot; Built with &#x2764;&#xFE0F;
+    </div>
+
+</body>
+</html>

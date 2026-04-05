@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "onix-web",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "/Users/omer/Desktop/onix/web", "-l", "3456", "--no-clipboard"],
+      "port": 3456
+    }
+  ]
+}

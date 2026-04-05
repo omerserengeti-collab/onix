@@ -1,0 +1,72 @@
+{
+  "name": "onix",
+  "version": "1.0.0",
+  "description": "Clap-triggered launcher — menu bar app",
+  "main": "main.js",
+  "author": "Omer Elias",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --mac",
+    "build:win": "electron-builder --win"
+  },
+  "build": {
+    "appId": "com.onix.app",
+    "productName": "Onix",
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "src/assets/onix.icns",
+      "target": [
+        "dmg"
+      ],
+      "identity": null,
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "Onix needs microphone access to detect your claps and launch your apps."
+      }
+    },
+    "afterPack": "./build/afterPack.js",
+    "win": {
+      "icon": "src/assets/onix.iconset/icon_256x256.png",
+      "target": [
+        "nsis"
+      ]
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "window": {
+        "width": 540,
+        "height": 380
+      },
+      "title": "Install Onix"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "omerserengeti-collab",
+      "repo": "onix"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "node_modules/**/*"
+    ]
+  },
+  "dependencies": {
+    "electron-store": "^8.1.0",
+    "electron-updater": "^6.8.3"
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^26.8.1"
+  }
+}

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Onix — Clap to Launch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ===================== ONBOARDING ===================== -->
+  <div id="onboarding" class="screen onboarding-bg" style="display:none;">
+    <div class="card onboarding-card">
+      <!-- Progress Dots -->
+      <div class="progress-dots">
+        <span class="dot active" data-step="0"></span>
+        <span class="dot" data-step="1"></span>
+        <span class="dot" data-step="2"></span>
+      </div>
+
+      <!-- Step 1: Music -->
+      <div class="step active" id="step-0">
+        <h2 class="step-title">What plays when you clap?</h2>
+        <p class="step-subtitle">Choose your music service and paste a link to your favorite track, playlist, or album.</p>
+
+        <div class="form-group">
+          <select id="music-service" class="input-select">
+            <option value="spotify">Spotify</option>
+            <option value="apple">Apple Music</option>
+            <option value="youtube">YouTube</option>
+            <option value="custom">Custom URL</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <input type="text" id="music-url" class="input-text" placeholder="https://open.spotify.com/track/...">
+        </div>
+
+        <div class="nav-buttons nav-buttons--end">
+          <button class="btn-primary" id="step0-next">Next</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Apps / Windows -->
+      <div class="step" id="step-1">
+        <h2 class="step-title">What opens when you clap?</h2>
+        <p class="step-subtitle">Add URLs that should open alongside your music. Think dashboards, docs, or tools you use daily.</p>
+
+        <div id="window-entries"></div>
+        <button class="add-btn" id="add-window-btn">+ Add another</button>
+
+        <div class="nav-buttons">
+          <button class="btn-outlined" id="step1-back">Back</button>
+          <button class="btn-primary" id="step1-next">Next</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Calibration -->
+      <div class="step" id="step-2">
+        <h2 class="step-title">Let's learn your clap</h2>
+        <p class="step-subtitle">We'll listen for 3 claps to calibrate sensitivity to your environment.</p>
+
+        <div class="mic-selector">
+          <label class="mic-label">Microphone</label>
+          <select id="mic-select" class="input-select">
+            <option value="default">Default microphone</option>
+          </select>
+          <div class="mic-status" id="mic-status"></div>
+        </div>
+
+        <div class="waveform-container">
+          <canvas id="waveform-canvas-onboarding"></canvas>
+        </div>
+
+        <div class="clap-indicator" id="clap-indicator">
+          <span class="clap-dot" data-i="0"></span>
+          <span class="clap-dot" data-i="1"></span>
+          <span class="clap-dot" data-i="2"></span>
+        </div>
+        <div class="calibration-prompt" id="calibration-prompt">Clap now</div>
+
+        <div class="calibration-success hidden" id="calibration-success">
+          <div class="success-text">Perfect! Your clap sensitivity is set.</div>
+          <div class="threshold-bar-container">
+            <div class="threshold-bar" id="threshold-bar"></div>
+            <div class="threshold-marker" id="threshold-marker"></div>
+          </div>
+        </div>
+
+        <div class="nav-buttons">
+          <button class="btn-outlined" id="step2-back">Back</button>
+          <button class="btn-primary" id="step2-finish" disabled>Start Onix</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== DASHBOARD ===================== -->
+  <div id="dashboard" class="screen dashboard-bg" style="display:none;">
+    <div class="card dashboard-card">
+      <div class="dash-header">
+        <span class="dash-title">Onix</span>
+        <span class="dash-icon">&#x1F44F;</span>
+      </div>
+
+      <!-- Status -->
+      <div class="dash-status-section">
+        <div class="toggle-row">
+          <span class="toggle-label">Listening</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="dash-toggle" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="status-indicator">
+          <span class="status-dot active" id="dash-status-dot"></span>
+          <span class="status-text" id="dash-status-text">Listening...</span>
+        </div>
+      </div>
+
+      <!-- Waveform -->
+      <div class="waveform-container waveform-small">
+        <canvas id="waveform-canvas-dash"></canvas>
+      </div>
+
+      <!-- Clap counter -->
+      <div class="clap-counter">
+        Claps detected: <span class="clap-count" id="dash-clap-count">0</span>
+      </div>
+
+      <!-- Clap detected flash -->
+      <div class="clap-flash hidden" id="clap-flash">
+        <span>👏 Clap detected! Launching...</span>
+      </div>
+      <!-- Popup blocked warning (one-time) -->
+      <div class="popup-warning hidden" id="popup-warning">
+        <span>⚠️ Browser blocked a window. Please allow popups for this site:</span>
+        <div class="popup-steps">Click the 🔒 icon in the address bar → Allow pop-ups → Reload</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <button class="settings-btn" id="open-settings-btn">Settings</button>
+
+      <div class="footer">Onix Web v1.0</div>
+    </div>
+  </div>
+
+  <!-- ===================== SETTINGS MODAL ===================== -->
+  <div class="modal-overlay hidden" id="settings-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Settings</h3>
+        <button class="modal-close" id="close-settings">&times;</button>
+      </div>
+
+      <!-- Tabs -->
+      <div class="modal-tabs">
+        <button class="modal-tab active" data-tab="tab-music">Music</button>
+        <button class="modal-tab" data-tab="tab-apps">Apps</button>
+        <button class="modal-tab" data-tab="tab-calibration">Calibration</button>
+        <button class="modal-tab" data-tab="tab-general">General</button>
+      </div>
+
+      <!-- Tab: Music -->
+      <div class="modal-body tab-content active" id="tab-music">
+        <div class="form-group">
+          <label class="field-label">Music Service</label>
+          <select id="settings-music-service" class="input-select">
+            <option value="spotify">Spotify</option>
+            <option value="apple">Apple Music</option>
+            <option value="youtube">YouTube</option>
+            <option value="custom">Custom URL</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="field-label">URL</label>
+          <input type="text" id="settings-music-url" class="input-text" placeholder="https://open.spotify.com/track/...">
+        </div>
+      </div>
+
+      <!-- Tab: Apps -->
+      <div class="modal-body tab-content" id="tab-apps">
+        <div id="settings-window-entries"></div>
+        <button class="add-btn" id="settings-add-window-btn">+ Add another</button>
+      </div>
+
+      <!-- Tab: Calibration -->
+      <div class="modal-body tab-content" id="tab-calibration">
+        <p class="step-subtitle" style="margin-bottom:16px;">Re-run the 3-clap calibration to adjust sensitivity for your current environment.</p>
+        <div class="mic-selector">
+          <label class="mic-label">Microphone</label>
+          <select id="settings-mic-select" class="input-select">
+            <option value="default">Default microphone</option>
+          </select>
+          <div class="mic-status" id="settings-mic-status"></div>
+        </div>
+        <div class="waveform-container">
+          <canvas id="waveform-canvas-settings"></canvas>
+        </div>
+        <div class="clap-indicator" id="settings-clap-indicator">
+          <span class="clap-dot" data-i="0"></span>
+          <span class="clap-dot" data-i="1"></span>
+          <span class="clap-dot" data-i="2"></span>
+        </div>
+        <div class="calibration-prompt" id="settings-calibration-prompt">Press "Re-calibrate" to begin</div>
+        <button class="btn-primary" id="recalibrate-btn" style="margin-top:12px;">Re-calibrate</button>
+      </div>
+
+      <!-- Tab: General -->
+      <div class="modal-body tab-content" id="tab-general">
+        <div class="form-group">
+          <label class="field-label">Sensitivity</label>
+          <p class="field-hint">Adjust how easily a clap is detected. Lower = more sensitive.</p>
+          <div class="slider-row">
+            <span class="slider-label">Sensitive</span>
+            <input type="range" id="sensitivity-slider" min="0" max="100" value="50" class="slider">
+            <span class="slider-label">Less sensitive</span>
+          </div>
+          <div class="slider-value" id="sensitivity-value">Threshold: --</div>
+        </div>
+        <div class="form-group" style="margin-top:24px;">
+          <label class="field-label">Reset</label>
+          <button class="btn-danger" id="reset-btn">Reset all settings</button>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-primary" id="save-settings-btn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== MIC PERMISSION DENIED ===================== -->
+  <div id="mic-denied" class="screen onboarding-bg" style="display:none;">
+    <div class="card onboarding-card" style="text-align:center;">
+      <div style="font-size:48px;margin-bottom:16px;">&#x1F399;&#xFE0F;</div>
+      <h2 class="step-title">Microphone access required</h2>
+      <p class="step-subtitle">Onix needs your microphone to detect claps. Please allow microphone access in your browser settings, then reload.</p>
+      <button class="btn-primary" onclick="location.reload()">Retry</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

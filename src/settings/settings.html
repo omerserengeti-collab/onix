@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Onix Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+  <div class="header">
+    <button class="back-btn" id="back-btn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
+      </svg>
+    </button>
+    <h1 class="title">Settings</h1>
+    <div class="header-spacer"></div>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <div class="tab active" data-tab="music">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+      </svg>
+      <span>Music</span>
+    </div>
+    <div class="tab" data-tab="apps">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+      </svg>
+      <span>Websites</span>
+    </div>
+    <div class="tab" data-tab="calibration">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+      </svg>
+      <span>Calibration</span>
+    </div>
+    <div class="tab" data-tab="general">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+      <span>General</span>
+    </div>
+  </div>
+
+  <!-- Music Tab -->
+  <div class="tab-content active" id="tab-music">
+    <div class="section-card">
+      <label class="form-label" style="margin-bottom: 12px;">Music Service</label>
+      <div class="service-grid">
+        <button class="service-card selected" data-service="spotify" type="button">
+          <svg class="service-logo" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M8 15c2.5-1 5.5-1 8 0"/>
+            <path d="M7 12c3-1.5 7-1.5 10 0"/>
+            <path d="M6.5 9c3.5-1.5 8.5-1.5 11 0"/>
+          </svg>
+          <span class="service-name">Spotify</span>
+        </button>
+        <button class="service-card" data-service="apple" type="button">
+          <svg class="service-logo" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18V5l12-2v13"/>
+            <circle cx="6" cy="18" r="3"/>
+            <circle cx="18" cy="16" r="3"/>
+          </svg>
+          <span class="service-name">Apple Music</span>
+        </button>
+        <button class="service-card" data-service="youtube" type="button">
+          <svg class="service-logo" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="4"/>
+            <polygon points="10,8 16,12 10,16" fill="#fff" stroke="none"/>
+          </svg>
+          <span class="service-name">YouTube</span>
+        </button>
+        <button class="service-card" data-service="custom" type="button">
+          <svg class="service-logo" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          </svg>
+          <span class="service-name">Custom URL</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <label class="form-label">Song / Playlist Link</label>
+      <select id="music-service" style="display:none;">
+        <option value="spotify">Spotify</option>
+        <option value="apple">Apple Music</option>
+        <option value="youtube">YouTube</option>
+        <option value="custom">Custom URL</option>
+      </select>
+      <input type="text" id="music-url" placeholder="Paste a Spotify track link...">
+
+      <!-- Song Preview -->
+      <div class="song-preview" id="song-preview" style="display:none; margin-top: 12px;">
+        <img class="song-art" id="song-art" src="" alt="">
+        <div class="song-info">
+          <div class="song-title" id="song-title"></div>
+          <div class="song-artist" id="song-artist"></div>
+        </div>
+        <div class="song-check">&#x2705;</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Apps Tab -->
+  <div class="tab-content" id="tab-apps">
+    <div class="section-card">
+      <div class="form-group">
+        <label class="form-label">Website URLs</label>
+        <p class="form-hint">These websites will open automatically when a clap is detected</p>
+        <div id="window-entries"></div>
+      </div>
+      <button class="add-window-btn" id="add-window-btn">+ Add another website</button>
+    </div>
+  </div>
+
+  <!-- Calibration Tab -->
+  <div class="tab-content" id="tab-calibration">
+    <div class="section-card" id="calibration-idle">
+      <div class="form-group">
+        <p class="threshold-display">Current sensitivity: <span id="current-threshold">0.42</span></p>
+      </div>
+      <div class="waveform-wrap">
+        <canvas id="waveform-canvas" width="520" height="120"></canvas>
+      </div>
+      <div class="form-group" style="margin-top: 20px; margin-bottom: 0;">
+        <button class="primary-btn" id="recalibrate-btn">Re-calibrate</button>
+      </div>
+    </div>
+    <div class="section-card" id="calibration-active" style="display: none;">
+      <p class="calibration-prompt" id="calibration-prompt">Clap 3 times. Waiting for claps...</p>
+      <div class="clap-dots" id="clap-dots">
+        <span class="clap-dot" id="dot-0"></span>
+        <span class="clap-dot" id="dot-1"></span>
+        <span class="clap-dot" id="dot-2"></span>
+      </div>
+      <div class="waveform-wrap">
+        <canvas id="waveform-canvas-active" width="520" height="120"></canvas>
+      </div>
+      <div class="form-group" style="margin-top: 20px; margin-bottom: 0;">
+        <button class="secondary-btn" id="cancel-calibration-btn">Cancel</button>
+      </div>
+    </div>
+    <div class="section-card" id="calibration-done" style="display: none;">
+      <p class="threshold-display">New sensitivity: <span id="new-threshold">0.42</span></p>
+      <div class="form-group" style="margin-top: 20px; margin-bottom: 0;">
+        <button class="primary-btn" id="calibration-done-btn">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- General Tab -->
+  <div class="tab-content" id="tab-general">
+    <div class="section-card">
+      <div class="form-group toggle-row">
+        <label class="form-label">Launch at login</label>
+        <label class="toggle">
+          <input type="checkbox" id="launch-at-login">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Sensitivity fine-tuning: <span id="sensitivity-value">0.42</span></label>
+        <input type="range" id="sensitivity-slider" min="0.21" max="0.63" step="0.01" value="0.42">
+      </div>
+
+      <div class="form-group toggle-row">
+        <label class="form-label">Show clap counter</label>
+        <label class="toggle">
+          <input type="checkbox" id="show-counter">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="section-card danger-zone">
+      <div class="form-group" style="margin-bottom: 12px;">
+        <button class="danger-btn" id="reset-counter-btn">Reset clap counter</button>
+      </div>
+      <div class="form-group" style="margin-bottom: 0;">
+        <button class="danger-btn" id="reset-all-btn">Reset all settings</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="save-bar">
+    <button class="save-btn" id="save-btn">Save Changes</button>
+  </div>
+
+  <script src="settings.js"></script>
+</body>
+</html>

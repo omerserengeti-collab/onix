@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=600, height=550">
+  <title>Onix — Setup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="onboarding.css">
+</head>
+<body>
+  <div class="onboarding-bg">
+    <!-- Progress Dots -->
+    <div class="progress-dots">
+      <span class="dot active" data-step="1"></span>
+      <span class="dot" data-step="2"></span>
+      <span class="dot" data-step="3"></span>
+      <span class="dot" data-step="4"></span>
+    </div>
+
+    <div class="card">
+      <!-- Step 1: Hardware Check -->
+      <div class="step active" id="step-1">
+        <img src="../assets/onix-logo.png" class="hero-logo" alt="Onix">
+        <h1 class="step-title">Welcome to Onix</h1>
+        <p class="step-subtitle">Clap your hands. Launch your world.</p>
+
+        <div class="section-card">
+          <div class="section-header">
+            <span class="section-label">Hardware check</span>
+            <span class="hw-status" id="hw-status">&#x23F3;</span>
+          </div>
+          <div class="mic-status-text" id="mic-status-text">Checking microphone...</div>
+          <div class="form-group">
+            <select id="mic-device" class="input-select">
+              <option value="">Detecting microphones...</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="nav-buttons nav-buttons--end">
+          <button class="btn-primary" id="btn-next-1">Continue</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Your Music -->
+      <div class="step" id="step-2">
+        <h1 class="step-title">What plays when you clap?</h1>
+        <p class="step-subtitle">Choose your music service and paste a link</p>
+
+        <!-- Service Cards Grid -->
+        <div class="service-grid">
+          <button class="service-card selected" data-service="spotify">
+            <svg class="service-logo" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M8 15c2.5-1 5.5-1 8 0"/>
+              <path d="M7 12c3-1.5 7-1.5 10 0"/>
+              <path d="M6.5 9c3.5-1.5 8.5-1.5 11 0"/>
+            </svg>
+            <span class="service-name">Spotify</span>
+          </button>
+          <button class="service-card" data-service="apple">
+            <svg class="service-logo" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18V5l12-2v13"/>
+              <circle cx="6" cy="18" r="3"/>
+              <circle cx="18" cy="16" r="3"/>
+            </svg>
+            <span class="service-name">Apple Music</span>
+          </button>
+          <button class="service-card" data-service="youtube">
+            <svg class="service-logo" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="4"/>
+              <polygon points="10,8 16,12 10,16" fill="#fff" stroke="none"/>
+            </svg>
+            <span class="service-name">YouTube</span>
+          </button>
+          <button class="service-card" data-service="custom">
+            <svg class="service-logo" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
+            <span class="service-name">Custom URL</span>
+          </button>
+        </div>
+
+        <!-- Hidden select for compatibility -->
+        <select id="music-service" class="input-select" style="display:none;">
+          <option value="spotify">Spotify</option>
+          <option value="apple">Apple Music</option>
+          <option value="youtube">YouTube</option>
+          <option value="custom">Custom URL</option>
+        </select>
+
+        <!-- URL Input -->
+        <div class="form-group">
+          <input
+            type="text"
+            id="music-url"
+            class="input-text"
+            placeholder="Paste a Spotify track link..."
+          >
+        </div>
+
+        <!-- Song Preview (hidden by default) -->
+        <div class="song-preview" id="song-preview" style="display:none;">
+          <img class="song-art" id="song-art" src="" alt="">
+          <div class="song-info">
+            <div class="song-title" id="song-title"></div>
+            <div class="song-artist" id="song-artist"></div>
+          </div>
+          <div class="song-check">&#x2705;</div>
+        </div>
+
+        <div class="nav-buttons">
+          <button class="btn-outlined" id="btn-back-2">&larr; Back</button>
+          <button class="btn-primary" id="btn-next-2">Continue</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Your Apps -->
+      <div class="step" id="step-3">
+        <div class="step-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9FD25D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+        </div>
+        <h1 class="step-title">What opens when you clap?</h1>
+        <p class="step-subtitle">Add website URLs to open automatically in your browser</p>
+
+        <div class="quick-picks">
+          <button class="quick-pick-btn" data-url="https://claude.ai" title="Claude">
+            <img src="https://claude.ai/favicon.ico" alt="Claude" class="qp-icon" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+            <span class="qp-fallback" style="display:none">🤖</span>
+            <span class="qp-label">Claude</span>
+          </button>
+          <button class="quick-pick-btn" data-url="https://chatgpt.com" title="ChatGPT">
+            <img src="https://chatgpt.com/favicon.ico" alt="ChatGPT" class="qp-icon" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+            <span class="qp-fallback" style="display:none">💬</span>
+            <span class="qp-label">ChatGPT</span>
+          </button>
+          <button class="quick-pick-btn" data-url="https://gemini.google.com" title="Gemini">
+            <img src="https://www.gstatic.com/lamda/images/gemini_favicon_f069958c85030456e93de685481c559f160ea06b.png" alt="Gemini" class="qp-icon" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+            <span class="qp-fallback" style="display:none">✨</span>
+            <span class="qp-label">Gemini</span>
+          </button>
+          <button class="quick-pick-btn" data-url="https://gmail.com" title="Gmail">
+            <img src="https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico" alt="Gmail" class="qp-icon" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+            <span class="qp-fallback" style="display:none">📧</span>
+            <span class="qp-label">Gmail</span>
+          </button>
+          <button class="quick-pick-btn" data-url="https://calendar.google.com" title="Calendar">
+            <img src="https://calendar.google.com/googlecalendar/images/favicons_2020q4/calendar_31.ico" alt="Calendar" class="qp-icon" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+            <span class="qp-fallback" style="display:none">📅</span>
+            <span class="qp-label">Calendar</span>
+          </button>
+        </div>
+
+        <div id="window-entries">
+          <!-- Rows injected by JS -->
+        </div>
+
+        <button class="add-btn" id="btn-add-window">+ Add another window</button>
+
+        <div class="nav-buttons">
+          <button class="btn-outlined" id="btn-back-3">&larr; Back</button>
+          <button class="btn-primary" id="btn-next-3">Continue</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Calibration -->
+      <div class="step" id="step-4">
+        <h1 class="step-title">Let's learn your clap</h1>
+        <p class="step-subtitle">Clap 3 times when prompted</p>
+
+        <div class="mic-select-row">
+          <label class="mic-label">&#x1F3A4; Microphone</label>
+          <select class="mic-select" id="calibration-mic-select">
+            <option value="default">Loading...</option>
+          </select>
+        </div>
+
+        <div class="waveform-container">
+          <canvas id="waveform-canvas" width="500" height="120"></canvas>
+        </div>
+
+        <div class="calibration-prompt" id="calibration-prompt">Clap now &#x1F44F;</div>
+
+        <div class="clap-indicator" id="clap-indicator">
+          <span class="clap-dot" data-clap="1"></span>
+          <span class="clap-dot" data-clap="2"></span>
+          <span class="clap-dot" data-clap="3"></span>
+        </div>
+
+        <div class="calibration-success hidden" id="calibration-success">
+          <div class="success-text">&#x2705; Perfect! Sensitivity set.</div>
+          <div class="threshold-bar-container">
+            <div class="threshold-bar" id="threshold-bar"></div>
+            <div class="threshold-marker" id="threshold-marker"></div>
+          </div>
+        </div>
+
+        <div class="nav-buttons">
+          <button class="btn-outlined" id="btn-back-4">&larr; Back</button>
+          <button class="btn-primary" id="btn-finish" disabled>Start Onix &#x1F680;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="onboarding.js"></script>
+</body>
+</html>
