@@ -64,28 +64,40 @@
   <!-- Paywall (hidden by default) -->
   <div class="paywall-card" id="paywallCard" style="display:none;">
     <img src="../assets/onix-logo.png" class="pw-logo" alt="Onix">
-    <div class="pw-step">
-      <div class="pw-step-badge done">&#x2713;</div>
-      <div class="pw-step-content">
-        <div class="pw-step-title">Hardware check</div>
-        <div class="pw-check ok">&#x25CF; Microphone OK &mdash; you're good to go!</div>
-      </div>
-    </div>
-    <div class="pw-step">
-      <div class="pw-step-badge">2</div>
-      <div class="pw-step-content">
-        <div class="pw-step-title">Activate license</div>
-        <button class="pw-buy-btn" id="paywallBuyBtn">&#x1F6D2; Buy a License &mdash; $7.99</button>
-        <div class="pw-key-section">
-          <div class="pw-key-label">Already have a key?</div>
-          <div class="pw-key-row">
-            <input type="text" id="paywallKeyInput" class="pw-key-input" placeholder="Paste license key">
-            <button class="pw-activate-btn" id="paywallActivateBtn">Activate</button>
-          </div>
-          <p class="pw-status" id="paywallStatus"></p>
+    <h2 class="pw-title">You're all set up!</h2>
+    <p class="pw-subtitle">Your free trial has ended. Unlock Onix to keep the magic going.</p>
+
+    <!-- Progress Steps -->
+    <div class="pw-progress">
+      <div class="pw-step-item completed">
+        <div class="pw-step-circle done">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
+        <div class="pw-step-label">Free trial</div>
+        <div class="pw-step-detail">3 claps completed</div>
+      </div>
+      <div class="pw-step-line"></div>
+      <div class="pw-step-item active">
+        <div class="pw-step-circle">2</div>
+        <div class="pw-step-label">Activate</div>
+        <div class="pw-step-detail">Unlock full access</div>
       </div>
     </div>
+
+    <!-- Buy Button -->
+    <button class="pw-buy-btn" id="paywallBuyBtn">Get Onix — $9.99</button>
+
+    <!-- License Key Input -->
+    <div class="pw-key-section">
+      <div class="pw-key-label">Already have a license key?</div>
+      <div class="pw-key-row">
+        <input type="text" id="paywallKeyInput" class="pw-key-input" placeholder="Paste your license key">
+        <button class="pw-activate-btn" id="paywallActivateBtn">Activate</button>
+      </div>
+      <p class="pw-status" id="paywallStatus"></p>
+    </div>
+
+    <p class="pw-micro">Help us build great products. Thank you for your support.</p>
   </div>
 
   <script src="popup.js"></script>

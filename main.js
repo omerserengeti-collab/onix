@@ -25,7 +25,7 @@ function initStore() {
       onboardingComplete: false,
       clapCount: 0,
       trialClapsUsed: 0,
-      trialMax: 1,
+      trialMax: 3,
       licenseKey: '',
       licenseValid: false
     }
@@ -672,6 +672,7 @@ ipcMain.on('audio-clap', (_event, volume) => {
       showTrialExhaustedNotification();
       showingPaywall = true;
       if (popupWindow && !popupWindow.isDestroyed()) {
+        popupWindow.setSize(380, 520);
         popupWindow.webContents.send('show-paywall');
         popupWindow.show();
         popupWindow.focus();
@@ -684,6 +685,7 @@ ipcMain.on('audio-clap', (_event, volume) => {
   stopListening();
   showingPaywall = true;
   if (popupWindow && !popupWindow.isDestroyed()) {
+    popupWindow.setSize(380, 520);
     popupWindow.webContents.send('show-paywall');
     popupWindow.show();
     popupWindow.focus();
@@ -733,6 +735,11 @@ ipcMain.handle('validate-license', async (_event, key) => {
       store.set('licenseInstanceId', response.instance?.id || '');
       console.log('[Onix] License activated via LemonSqueezy:', trimmedKey);
       showingPaywall = false;
+
+      // Resize popup back to normal
+      if (popupWindow && !popupWindow.isDestroyed()) {
+        popupWindow.setSize(344, 280);
+      }
 
       // Close paywall window after a short delay to let UI update
       setTimeout(() => {
