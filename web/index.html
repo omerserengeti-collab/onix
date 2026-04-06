@@ -3,246 +3,643 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Onix — Clap to Launch</title>
+  <title>Onix — Clap. And you're in.</title>
+  <meta name="description" content="Onix is a Mac menu bar app that hears your double clap and instantly launches your music and workspace.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=Inter:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --green: #9FD25D;
+      --green-dim: rgba(159, 210, 93, 0.15);
+      --bg: #0a0a0a;
+      --bg-raised: #111111;
+      --bg-card: #161616;
+      --text: #f0f0f0;
+      --text-dim: #888888;
+      --font-heading: 'Syne', sans-serif;
+      --font-body: 'Inter', sans-serif;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ─── NAV ─── */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(10, 10, 10, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 64px;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-logo img {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+    }
+
+    .nav-logo span {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: 0.9rem;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(159, 210, 93, 0.25);
+    }
+
+    .btn-primary {
+      background: var(--green);
+      color: #0a0a0a;
+    }
+
+    .btn-large {
+      padding: 16px 36px;
+      font-size: 1.05rem;
+      border-radius: 14px;
+    }
+
+    /* ─── HERO ─── */
+    .hero {
+      padding: 160px 0 100px;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-size: clamp(2.25rem, 5vw, 3.5rem);
+      line-height: 1.1;
+      letter-spacing: 0.06em;
+      margin-bottom: 20px;
+      color: #ffffff;
+    }
+
+    .hero p.subtitle {
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      color: var(--text-dim);
+      max-width: 540px;
+      margin: 0 auto 80px;
+      line-height: 1.7;
+    }
+
+    .hero .btn svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    .hero-note {
+      margin-top: 16px;
+      font-size: 0.82rem;
+      color: var(--text-dim);
+    }
+
+    /* ─── WAVEFORM ─── */
+    .waveform {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      height: 160px;
+      width: 1000px;
+      max-width: 90vw;
+      margin: 0 auto 48px;
+    }
+
+    .waveform .bar {
+      width: 5px;
+      border-radius: 2px;
+      background: var(--green);
+      animation: wave 1.2s ease-in-out infinite;
+    }
+
+    @keyframes wave {
+      0%, 100% { height: 6px; opacity: 0.35; }
+      50% { height: var(--h, 40px); opacity: 1; }
+    }
+
+    /* ─── DEMO VIDEO ─── */
+    .demo-video {
+      padding: 80px 0;
+      text-align: center;
+    }
+
+    .demo-video video {
+      width: 320px;
+      height: 568px;
+      border-radius: 24px;
+      object-fit: cover;
+      border: 1px solid rgba(159, 210, 93, 0.25);
+      box-shadow: 0 0 80px rgba(159, 210, 93, 0.1);
+      display: block;
+      margin: 0 auto;
+    }
+
+    /* ─── HOW IT WORKS ─── */
+    .how {
+      padding: 80px 0;
+    }
+
+    .section-label {
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--green);
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      text-align: center;
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+      margin-bottom: 56px;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+    }
+
+    .step {
+      text-align: center;
+      padding: 36px 24px;
+      border-radius: 16px;
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .step-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 20px auto 0;
+    }
+
+    .step-icon svg {
+      width: 36px;
+      height: 36px;
+    }
+
+    .step-logos {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin: 28px auto 0;
+    }
+
+    .step-logos svg {
+      width: 42px;
+      height: 42px;
+    }
+
+    .step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--green);
+      color: var(--bg);
+      font-weight: 700;
+      font-size: 0.8rem;
+      margin-bottom: 14px;
+    }
+
+    .step h3 {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 1.15rem;
+      margin-bottom: 8px;
+    }
+
+    .step p {
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    /* ─── FEATURES ─── */
+    .features {
+      padding: 80px 0;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .feature-card {
+      padding: 32px;
+      border-radius: 16px;
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: border-color 0.3s;
+    }
+
+    .feature-card:hover {
+      border-color: rgba(159, 210, 93, 0.2);
+    }
+
+    .feature-card .icon {
+      display: block;
+      margin-bottom: 16px;
+    }
+
+    .feature-card .icon svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .feature-card h3 {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+    }
+
+    .feature-card p {
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    /* ─── GATEKEEPER ─── */
+    .gatekeeper {
+      padding: 80px 0;
+    }
+
+    .gatekeeper-box {
+      background: var(--bg-raised);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 20px;
+      padding: 48px;
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    .gatekeeper-box h2 {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 1.5rem;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .gatekeeper-box > p {
+      color: var(--text-dim);
+      font-size: 0.95rem;
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .gk-images {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .gk-images img {
+      max-width: 45%;
+      border-radius: 12px;
+      object-fit: contain;
+    }
+
+    .gk-note {
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--text-dim);
+    }
+
+    /* ─── DOWNLOAD ─── */
+    .download {
+      padding: 100px 0;
+      text-align: center;
+    }
+
+    .download h2 {
+      font-family: var(--font-heading);
+      font-weight: 800;
+      font-size: clamp(2rem, 5vw, 3rem);
+      margin-bottom: 32px;
+    }
+
+    .download .btn svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    .download-meta {
+      margin-top: 16px;
+      font-size: 0.82rem;
+      color: var(--text-dim);
+    }
+
+    /* ─── FOOTER ─── */
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 24px 0;
+    }
+
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      color: var(--text-dim);
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 768px) {
+      .steps {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding: 130px 0 70px;
+      }
+
+      .gatekeeper-box {
+        padding: 32px 24px;
+      }
+
+      .gk-images {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .gk-images img {
+        max-width: 90%;
+      }
+    }
+  </style>
 </head>
 <body>
 
-  <!-- ===================== ONBOARDING ===================== -->
-  <div id="onboarding" class="screen onboarding-bg" style="display:none;">
-    <div class="card onboarding-card">
-      <!-- Progress Dots -->
-      <div class="progress-dots">
-        <span class="dot active" data-step="0"></span>
-        <span class="dot" data-step="1"></span>
-        <span class="dot" data-step="2"></span>
+  <!-- NAV -->
+  <nav>
+    <div class="container nav-inner">
+      <a href="#" class="nav-logo">
+        <span>Onix</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <div class="waveform" aria-hidden="true">
+        <span class="bar" style="--h:30px;animation-delay:0.00s"></span>
+        <span class="bar" style="--h:55px;animation-delay:0.38s"></span>
+        <span class="bar" style="--h:80px;animation-delay:0.10s"></span>
+        <span class="bar" style="--h:28px;animation-delay:0.45s"></span>
+        <span class="bar" style="--h:100px;animation-delay:0.05s"></span>
+        <span class="bar" style="--h:45px;animation-delay:0.30s"></span>
+        <span class="bar" style="--h:120px;animation-delay:0.15s"></span>
+        <span class="bar" style="--h:55px;animation-delay:0.42s"></span>
+        <span class="bar" style="--h:140px;animation-delay:0.08s"></span>
+        <span class="bar" style="--h:40px;animation-delay:0.35s"></span>
+        <span class="bar" style="--h:90px;animation-delay:0.18s"></span>
+        <span class="bar" style="--h:145px;animation-delay:0.02s"></span>
+        <span class="bar" style="--h:60px;animation-delay:0.28s"></span>
+        <span class="bar" style="--h:110px;animation-delay:0.12s"></span>
+        <span class="bar" style="--h:35px;animation-delay:0.40s"></span>
+        <span class="bar" style="--h:85px;animation-delay:0.20s"></span>
+        <span class="bar" style="--h:130px;animation-delay:0.07s"></span>
+        <span class="bar" style="--h:50px;animation-delay:0.32s"></span>
+        <span class="bar" style="--h:105px;animation-delay:0.14s"></span>
+        <span class="bar" style="--h:30px;animation-delay:0.44s"></span>
+        <span class="bar" style="--h:75px;animation-delay:0.03s"></span>
+        <span class="bar" style="--h:135px;animation-delay:0.19s"></span>
+        <span class="bar" style="--h:42px;animation-delay:0.36s"></span>
+        <span class="bar" style="--h:150px;animation-delay:0.09s"></span>
+        <span class="bar" style="--h:55px;animation-delay:0.25s"></span>
+        <span class="bar" style="--h:115px;animation-delay:0.06s"></span>
+        <span class="bar" style="--h:35px;animation-delay:0.38s"></span>
+        <span class="bar" style="--h:95px;animation-delay:0.16s"></span>
+        <span class="bar" style="--h:48px;animation-delay:0.43s"></span>
+        <span class="bar" style="--h:125px;animation-delay:0.04s"></span>
+        <span class="bar" style="--h:38px;animation-delay:0.33s"></span>
+        <span class="bar" style="--h:105px;animation-delay:0.11s"></span>
+        <span class="bar" style="--h:65px;animation-delay:0.27s"></span>
+        <span class="bar" style="--h:140px;animation-delay:0.01s"></span>
+        <span class="bar" style="--h:44px;animation-delay:0.37s"></span>
+        <span class="bar" style="--h:88px;animation-delay:0.22s"></span>
+        <span class="bar" style="--h:32px;animation-delay:0.41s"></span>
+        <span class="bar" style="--h:110px;animation-delay:0.13s"></span>
+        <span class="bar" style="--h:52px;animation-delay:0.29s"></span>
+        <span class="bar" style="--h:130px;animation-delay:0.06s"></span>
+        <span class="bar" style="--h:36px;animation-delay:0.34s"></span>
+        <span class="bar" style="--h:95px;animation-delay:0.17s"></span>
+        <span class="bar" style="--h:145px;animation-delay:0.03s"></span>
+        <span class="bar" style="--h:58px;animation-delay:0.26s"></span>
+        <span class="bar" style="--h:100px;animation-delay:0.10s"></span>
+        <span class="bar" style="--h:40px;animation-delay:0.39s"></span>
+        <span class="bar" style="--h:70px;animation-delay:0.21s"></span>
+        <span class="bar" style="--h:28px;animation-delay:0.46s"></span>
       </div>
+      <h1>Clap. And you're in.</h1>
+      <p class="subtitle">Onix hears your double clap and instantly launches your music and workspace. Every time.</p>
+      <a href="https://github.com/omerserengeti-collab/onix/releases/download/v1.2.7/Onix-1.2.7-arm64.dmg" class="btn btn-primary btn-large">
+        <svg viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+        Download for Mac — Free Trial
+      </a>
+      <p class="hero-note">Free trial · Mac only · Requires microphone</p>
+    </div>
+  </section>
 
-      <!-- Step 1: Music -->
-      <div class="step active" id="step-0">
-        <h2 class="step-title">What plays when you clap?</h2>
-        <p class="step-subtitle">Choose your music service and paste a link to your favorite track, playlist, or album.</p>
+  <!-- DEMO VIDEO -->
+  <section class="demo-video">
+    <div class="container">
+      <video controls muted playsinline src="assets/demo.mp4"></video>
+    </div>
+  </section>
 
-        <div class="form-group">
-          <select id="music-service" class="input-select">
-            <option value="spotify">Spotify</option>
-            <option value="apple">Apple Music</option>
-            <option value="youtube">YouTube</option>
-            <option value="custom">Custom URL</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <input type="text" id="music-url" class="input-text" placeholder="https://open.spotify.com/track/...">
-        </div>
-
-        <div class="nav-buttons nav-buttons--end">
-          <button class="btn-primary" id="step0-next">Next</button>
-        </div>
-      </div>
-
-      <!-- Step 2: Apps / Windows -->
-      <div class="step" id="step-1">
-        <h2 class="step-title">What opens when you clap?</h2>
-        <p class="step-subtitle">Add URLs that should open alongside your music. Think dashboards, docs, or tools you use daily.</p>
-
-        <div id="window-entries"></div>
-        <button class="add-btn" id="add-window-btn">+ Add another</button>
-
-        <div class="nav-buttons">
-          <button class="btn-outlined" id="step1-back">Back</button>
-          <button class="btn-primary" id="step1-next">Next</button>
-        </div>
-      </div>
-
-      <!-- Step 3: Calibration -->
-      <div class="step" id="step-2">
-        <h2 class="step-title">Let's learn your clap</h2>
-        <p class="step-subtitle">We'll listen for 3 claps to calibrate sensitivity to your environment.</p>
-
-        <div class="mic-selector">
-          <label class="mic-label">Microphone</label>
-          <select id="mic-select" class="input-select">
-            <option value="default">Default microphone</option>
-          </select>
-          <div class="mic-status" id="mic-status"></div>
-        </div>
-
-        <div class="waveform-container">
-          <canvas id="waveform-canvas-onboarding"></canvas>
-        </div>
-
-        <div class="clap-indicator" id="clap-indicator">
-          <span class="clap-dot" data-i="0"></span>
-          <span class="clap-dot" data-i="1"></span>
-          <span class="clap-dot" data-i="2"></span>
-        </div>
-        <div class="calibration-prompt" id="calibration-prompt">Clap now</div>
-
-        <div class="calibration-success hidden" id="calibration-success">
-          <div class="success-text">Perfect! Your clap sensitivity is set.</div>
-          <div class="threshold-bar-container">
-            <div class="threshold-bar" id="threshold-bar"></div>
-            <div class="threshold-marker" id="threshold-marker"></div>
+  <!-- HOW IT WORKS -->
+  <section class="how">
+    <div class="container">
+      <p class="section-label">How it works</p>
+      <h2 class="section-title">Three claps to launch</h2>
+      <div class="steps">
+        <div class="step">
+          <span class="step-num">1</span>
+          <h3>Double clap</h3>
+          <p>Onix hears you through your mic — filters out background noise, catches only real claps.</p>
+          <div class="step-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#9FD25D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
           </div>
         </div>
-
-        <div class="nav-buttons">
-          <button class="btn-outlined" id="step2-back">Back</button>
-          <button class="btn-primary" id="step2-finish" disabled>Start Onix</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===================== DASHBOARD ===================== -->
-  <div id="dashboard" class="screen dashboard-bg" style="display:none;">
-    <div class="card dashboard-card">
-      <div class="dash-header">
-        <span class="dash-title">Onix</span>
-        <span class="dash-icon">&#x1F44F;</span>
-      </div>
-
-      <!-- Status -->
-      <div class="dash-status-section">
-        <div class="toggle-row">
-          <span class="toggle-label">Listening</span>
-          <label class="toggle-switch">
-            <input type="checkbox" id="dash-toggle" checked>
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-        <div class="status-indicator">
-          <span class="status-dot active" id="dash-status-dot"></span>
-          <span class="status-text" id="dash-status-text">Listening...</span>
-        </div>
-      </div>
-
-      <!-- Waveform -->
-      <div class="waveform-container waveform-small">
-        <canvas id="waveform-canvas-dash"></canvas>
-      </div>
-
-      <!-- Clap counter -->
-      <div class="clap-counter">
-        Claps detected: <span class="clap-count" id="dash-clap-count">0</span>
-      </div>
-
-      <!-- Clap detected flash -->
-      <div class="clap-flash hidden" id="clap-flash">
-        <span>👏 Clap detected! Launching...</span>
-      </div>
-      <!-- Popup blocked warning (one-time) -->
-      <div class="popup-warning hidden" id="popup-warning">
-        <span>⚠️ Browser blocked a window. Please allow popups for this site:</span>
-        <div class="popup-steps">Click the 🔒 icon in the address bar → Allow pop-ups → Reload</div>
-      </div>
-
-      <div class="divider"></div>
-
-      <button class="settings-btn" id="open-settings-btn">Settings</button>
-
-      <div class="footer">Onix Web v1.0</div>
-    </div>
-  </div>
-
-  <!-- ===================== SETTINGS MODAL ===================== -->
-  <div class="modal-overlay hidden" id="settings-overlay">
-    <div class="modal">
-      <div class="modal-header">
-        <h3 class="modal-title">Settings</h3>
-        <button class="modal-close" id="close-settings">&times;</button>
-      </div>
-
-      <!-- Tabs -->
-      <div class="modal-tabs">
-        <button class="modal-tab active" data-tab="tab-music">Music</button>
-        <button class="modal-tab" data-tab="tab-apps">Apps</button>
-        <button class="modal-tab" data-tab="tab-calibration">Calibration</button>
-        <button class="modal-tab" data-tab="tab-general">General</button>
-      </div>
-
-      <!-- Tab: Music -->
-      <div class="modal-body tab-content active" id="tab-music">
-        <div class="form-group">
-          <label class="field-label">Music Service</label>
-          <select id="settings-music-service" class="input-select">
-            <option value="spotify">Spotify</option>
-            <option value="apple">Apple Music</option>
-            <option value="youtube">YouTube</option>
-            <option value="custom">Custom URL</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="field-label">URL</label>
-          <input type="text" id="settings-music-url" class="input-text" placeholder="https://open.spotify.com/track/...">
-        </div>
-      </div>
-
-      <!-- Tab: Apps -->
-      <div class="modal-body tab-content" id="tab-apps">
-        <div id="settings-window-entries"></div>
-        <button class="add-btn" id="settings-add-window-btn">+ Add another</button>
-      </div>
-
-      <!-- Tab: Calibration -->
-      <div class="modal-body tab-content" id="tab-calibration">
-        <p class="step-subtitle" style="margin-bottom:16px;">Re-run the 3-clap calibration to adjust sensitivity for your current environment.</p>
-        <div class="mic-selector">
-          <label class="mic-label">Microphone</label>
-          <select id="settings-mic-select" class="input-select">
-            <option value="default">Default microphone</option>
-          </select>
-          <div class="mic-status" id="settings-mic-status"></div>
-        </div>
-        <div class="waveform-container">
-          <canvas id="waveform-canvas-settings"></canvas>
-        </div>
-        <div class="clap-indicator" id="settings-clap-indicator">
-          <span class="clap-dot" data-i="0"></span>
-          <span class="clap-dot" data-i="1"></span>
-          <span class="clap-dot" data-i="2"></span>
-        </div>
-        <div class="calibration-prompt" id="settings-calibration-prompt">Press "Re-calibrate" to begin</div>
-        <button class="btn-primary" id="recalibrate-btn" style="margin-top:12px;">Re-calibrate</button>
-      </div>
-
-      <!-- Tab: General -->
-      <div class="modal-body tab-content" id="tab-general">
-        <div class="form-group">
-          <label class="field-label">Sensitivity</label>
-          <p class="field-hint">Adjust how easily a clap is detected. Lower = more sensitive.</p>
-          <div class="slider-row">
-            <span class="slider-label">Sensitive</span>
-            <input type="range" id="sensitivity-slider" min="0" max="100" value="50" class="slider">
-            <span class="slider-label">Less sensitive</span>
+        <div class="step">
+          <span class="step-num">2</span>
+          <h3>Music starts</h3>
+          <p>Spotify or YouTube — your chosen track plays automatically.</p>
+          <div class="step-logos">
+            <!-- YouTube -->
+            <svg viewBox="0 0 48 48"><rect x="4" y="10" width="40" height="28" rx="6" fill="#FF0000"/><polygon points="20,16 20,32 33,24" fill="#FFFFFF"/></svg>
+            <!-- Spotify -->
+            <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="#1DB954"/><path d="M15 28c6-2 13-2 19 1" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M13 22c8-3 17-3 23 1.5" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M11 16c10-3.5 21-3 27 2" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
           </div>
-          <div class="slider-value" id="sensitivity-value">Threshold: --</div>
         </div>
-        <div class="form-group" style="margin-top:24px;">
-          <label class="field-label">Reset</label>
-          <button class="btn-danger" id="reset-btn">Reset all settings</button>
+        <div class="step">
+          <span class="step-num">3</span>
+          <h3>Apps open</h3>
+          <p>Your apps load in Chrome, ready to go. Same setup, every time.</p>
+          <div class="step-logos">
+            <!-- ChatGPT (OpenAI) -->
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="#10A37F" fill-rule="evenodd"><path d="M9.205 8.658v-2.26c0-.19.072-.333.238-.428l4.543-2.616c.619-.357 1.356-.523 2.117-.523 2.854 0 4.662 2.212 4.662 4.566 0 .167 0 .357-.024.547l-4.71-2.759a.797.797 0 00-.856 0l-5.97 3.473zm10.609 8.8V12.06c0-.333-.143-.57-.429-.737l-5.97-3.473 1.95-1.118a.433.433 0 01.476 0l4.543 2.617c1.309.76 2.189 2.378 2.189 3.948 0 1.808-1.07 3.473-2.76 4.163zM7.802 12.703l-1.95-1.142c-.167-.095-.239-.238-.239-.428V5.899c0-2.545 1.95-4.472 4.591-4.472 1 0 1.927.333 2.712.928L8.23 5.067c-.285.166-.428.404-.428.737v6.898zM12 15.128l-2.795-1.57v-3.33L12 8.658l2.795 1.57v3.33L12 15.128zm1.796 7.23c-1 0-1.927-.332-2.712-.927l4.686-2.712c.285-.166.428-.404.428-.737v-6.898l1.974 1.142c.167.095.238.238.238.428v5.233c0 2.545-1.974 4.472-4.614 4.472zm-5.637-5.303l-4.544-2.617c-1.308-.761-2.188-2.378-2.188-3.948A4.482 4.482 0 014.21 6.327v5.423c0 .333.143.571.428.738l5.947 3.449-1.95 1.118a.432.432 0 01-.476 0zm-.262 3.9c-2.688 0-4.662-2.021-4.662-4.519 0-.19.024-.38.047-.57l4.686 2.71c.286.167.571.167.856 0l5.97-3.448v2.26c0 .19-.07.333-.237.428l-4.543 2.616c-.619.357-1.356.523-2.117.523zm5.899 2.83a5.947 5.947 0 005.827-4.756C22.287 18.339 24 15.84 24 13.296c0-1.665-.713-3.282-1.998-4.448.119-.5.19-.999.19-1.498 0-3.401-2.759-5.947-5.946-5.947-.642 0-1.26.095-1.88.31A5.962 5.962 0 0010.205 0a5.947 5.947 0 00-5.827 4.757C1.713 5.447 0 7.945 0 10.49c0 1.666.713 3.283 1.998 4.448-.119.5-.19 1-.19 1.499 0 3.401 2.759 5.946 5.946 5.946.642 0 1.26-.095 1.88-.309a5.96 5.96 0 004.162 1.713z"/></svg>
+            <!-- Claude -->
+            <svg viewBox="0 0 24 24" width="28" height="28"><path d="M4.709 15.955l4.72-2.647.08-.23-.08-.128H9.2l-.79-.048-2.698-.073-2.339-.097-2.266-.122-.571-.121L0 11.784l.055-.352.48-.321.686.06 1.52.103 2.278.158 1.652.097 2.449.255h.389l.055-.157-.134-.098-.103-.097-2.358-1.596-2.552-1.688-1.336-.972-.724-.491-.364-.462-.158-1.008.656-.722.881.06.225.061.893.686 1.908 1.476 2.491 1.833.365.304.145-.103.019-.073-.164-.274-1.355-2.446-1.446-2.49-.644-1.032-.17-.619a2.97 2.97 0 01-.104-.729L6.283.134 6.696 0l.996.134.42.364.62 1.414 1.002 2.229 1.555 3.03.456.898.243.832.091.255h.158V9.01l.128-1.706.237-2.095.23-2.695.08-.76.376-.91.747-.492.584.28.48.685-.067.444-.286 1.851-.559 2.903-.364 1.942h.212l.243-.242.985-1.306 1.652-2.064.73-.82.85-.904.547-.431h1.033l.76 1.129-.34 1.166-1.064 1.347-.881 1.142-1.264 1.7-.79 1.36.073.11.188-.02 2.856-.606 1.543-.28 1.841-.315.833.388.091.395-.328.807-1.969.486-2.309.462-3.439.813-.042.03.049.061 1.549.146.662.036h1.622l3.02.225.79.522.474.638-.079.485-1.215.62-1.64-.389-3.829-.91-1.312-.329h-.182v.11l1.093 1.068 2.006 1.81 2.509 2.33.127.578-.322.455-.34-.049-2.205-1.657-.851-.747-1.926-1.62h-.128v.17l.444.649 2.345 3.521.122 1.08-.17.353-.608.213-.668-.122-1.374-1.925-1.415-2.167-1.143-1.943-.14.08-.674 7.254-.316.37-.729.28-.607-.461-.322-.747.322-1.476.389-1.924.315-1.53.286-1.9.17-.632-.012-.042-.14.018-1.434 1.967-2.18 2.945-1.726 1.845-.414.164-.717-.37.067-.662.401-.589 2.388-3.036 1.44-1.882.93-1.086-.006-.158h-.055L4.132 18.56l-1.13.146-.487-.456.061-.746.231-.243 1.908-1.312-.006.006z" fill="#D97757" fill-rule="nonzero"/></svg>
+            <!-- Gemini -->
+            <svg viewBox="0 0 24 24" width="28" height="28"><path d="M20.616 10.835a14.147 14.147 0 01-4.45-3.001 14.111 14.111 0 01-3.678-6.452.503.503 0 00-.975 0 14.134 14.134 0 01-3.679 6.452 14.155 14.155 0 01-4.45 3.001c-.65.28-1.318.505-2.002.678a.502.502 0 000 .975c.684.172 1.35.397 2.002.677a14.147 14.147 0 014.45 3.001 14.112 14.112 0 013.679 6.453.502.502 0 00.975 0c.172-.685.397-1.351.677-2.003a14.145 14.145 0 013.001-4.45 14.113 14.113 0 016.453-3.678.503.503 0 000-.975 13.245 13.245 0 01-2.003-.678z" fill="#3186FF"/></svg>
+          </div>
         </div>
       </div>
+    </div>
+  </section>
 
-      <div class="modal-footer">
-        <button class="btn-primary" id="save-settings-btn">Save</button>
+  <!-- FEATURES -->
+  <section class="features">
+    <div class="container">
+      <p class="section-label">Features</p>
+      <h2 class="section-title">Built for how you actually work</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <span class="icon">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#9FD25D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h2l3-7 4 14 4-10 3 6h4"/></svg>
+          </span>
+          <h3>Smart clap detection</h3>
+          <p>Ambient noise filtering, spike analysis, and quiet-period gating — only real double claps trigger your setup.</p>
+        </div>
+        <div class="feature-card">
+          <span class="icon">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#9FD25D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          </span>
+          <h3>Your setup, every time</h3>
+          <p>Configure your music and websites once. Onix remembers and launches them exactly the same way, every session.</p>
+        </div>
+        <div class="feature-card">
+          <span class="icon">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#9FD25D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="6" rx="2"/><circle cx="7" cy="6" r="1" fill="#9FD25D" stroke="none"/><circle cx="11" cy="6" r="1" fill="#9FD25D" stroke="none"/><circle cx="15" cy="6" r="1" fill="#9FD25D" stroke="none"/></svg>
+          </span>
+          <h3>Lives in your menu bar</h3>
+          <p>Always ready, never in the way. A tiny icon in your menu bar — that's it. No dock icon, no clutter.</p>
+        </div>
+        <div class="feature-card">
+          <span class="icon">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#9FD25D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11.5 14.5 16 9.5"/></svg>
+          </span>
+          <h3>One-time price</h3>
+          <p>$12, once. No subscription, no recurring fees. Pay once, use it forever.</p>
+        </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- ===================== MIC PERMISSION DENIED ===================== -->
-  <div id="mic-denied" class="screen onboarding-bg" style="display:none;">
-    <div class="card onboarding-card" style="text-align:center;">
-      <div style="font-size:48px;margin-bottom:16px;">&#x1F399;&#xFE0F;</div>
-      <h2 class="step-title">Microphone access required</h2>
-      <p class="step-subtitle">Onix needs your microphone to detect claps. Please allow microphone access in your browser settings, then reload.</p>
-      <button class="btn-primary" onclick="location.reload()">Retry</button>
+  <!-- GATEKEEPER -->
+  <section class="gatekeeper">
+    <div class="container">
+      <div class="gatekeeper-box">
+        <h2>First launch on Mac</h2>
+        <p>Since Onix isn't from the App Store, macOS will show a security warning. Here's how to open it:</p>
+        <div class="gk-images">
+          <img src="assets/gatekeeper-1.png" alt="Step 1: Open Privacy and Security settings">
+          <img src="assets/gatekeeper-2.png" alt="Step 2: Click Open Anyway">
+        </div>
+        <p class="gk-note">You only need to do this once. Apple Developer certificate coming soon.</p>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <script src="app.js"></script>
+  <!-- DOWNLOAD -->
+  <section class="download" id="download">
+    <div class="container">
+      <h2>Ready to clap?</h2>
+      <a href="https://github.com/omerserengeti-collab/onix/releases/download/v1.2.7/Onix-1.2.7-arm64.dmg" class="btn btn-primary btn-large">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+        Download for Mac
+      </a>
+      <p class="download-meta">macOS 12+ · Apple Silicon · v1.2.7</p>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container footer-inner">
+      <span>Onix &copy; 2026</span>
+      <span>Made for Mac</span>
+    </div>
+  </footer>
+
 </body>
 </html>
