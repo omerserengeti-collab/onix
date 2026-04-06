@@ -319,7 +319,7 @@ function isLicensed() {
 
 function canUseTrial() {
   const used = store.get('trialClapsUsed', 0);
-  const max = store.get('trialMax', 1);
+  const max = store.get('trialMax', 3);
   return used < max;
 }
 
@@ -332,7 +332,7 @@ function showTrialExhaustedNotification() {
   if (Notification.isSupported()) {
     const notif = new Notification({
       title: 'Onix',
-      body: "You've used your free clap. Buy a license to continue.",
+      body: "You've used all your free trials. Buy a license to continue.",
       silent: true
     });
     notif.show();
@@ -516,6 +516,8 @@ ipcMain.on('close-window', (event) => {
     win.close();
   }
 });
+
+ipcMain.handle('get-listening-state', () => isListening);
 
 ipcMain.on('resize-popup', (_event, width, height) => {
   if (popupWindow && !popupWindow.isDestroyed()) {

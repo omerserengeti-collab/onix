@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('onix', {
 
   // ── Listening Control ───────────────────────────────────────────────────────
   toggleListening: (enabled) => ipcRenderer.send('toggle-listening', enabled),
+  getListeningState: () => ipcRenderer.invoke('get-listening-state'),
 
   // ── Window Management ─────────────────────────────────────────────────────
   openSettings: () => ipcRenderer.send('open-settings'),

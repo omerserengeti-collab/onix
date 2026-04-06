@@ -245,11 +245,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.onix.installUpdate();
   });
 
-  // ── Auto-show mic section if already listening ──
+  // ── Auto-sync listening state on popup load ──
   try {
-    const settings = await window.onix.getSettings();
-    if (settings.onboardingComplete && settings.licenseValid) {
-      // Check if we should auto-enable based on last state
+    const listening = await window.onix.getListeningState();
+    if (listening) {
+      toggle.checked = true;
+      updateUI(true);
     }
   } catch (e) {}
 });
