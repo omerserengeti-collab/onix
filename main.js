@@ -517,6 +517,12 @@ ipcMain.on('close-window', (event) => {
   }
 });
 
+ipcMain.on('resize-popup', (_event, width, height) => {
+  if (popupWindow && !popupWindow.isDestroyed()) {
+    popupWindow.setSize(width, height);
+  }
+});
+
 // Onboarding completion
 ipcMain.on('finish-onboarding', (_event, settings) => {
   if (settings) {

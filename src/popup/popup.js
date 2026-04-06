@@ -155,11 +155,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   function showPaywall() {
     card.style.display = 'none';
     paywallCard.style.display = 'block';
+    window.onix.resizePopup(380, 520);
   }
 
   function hidePaywall() {
     paywallCard.style.display = 'none';
     card.style.display = 'flex';
+    window.onix.resizePopup(344, 280);
   }
 
   const buyBtn = document.getElementById('paywallBuyBtn');

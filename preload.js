@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld('onix', {
   // ── Window Management ─────────────────────────────────────────────────────
   openSettings: () => ipcRenderer.send('open-settings'),
   closeWindow: () => ipcRenderer.send('close-window'),
+  resizePopup: (width, height) => ipcRenderer.send('resize-popup', width, height),
   finishOnboarding: (settings) => ipcRenderer.send('finish-onboarding', settings),
 
   // ── Calibration ─────────────────────────────────────────────────────────────
