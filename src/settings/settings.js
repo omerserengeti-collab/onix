@@ -35,12 +35,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const waveformCanvas = document.getElementById('waveform-canvas');
   const waveformCanvasActive = document.getElementById('waveform-canvas-active');
 
-  // General
+  // Settings (merged tab)
   const launchAtLogin = document.getElementById('launch-at-login');
   const sensitivitySlider = document.getElementById('sensitivity-slider');
   const sensitivityValue = document.getElementById('sensitivity-value');
-  const showCounter = document.getElementById('show-counter');
-  const resetCounterBtn = document.getElementById('reset-counter-btn');
   const resetAllBtn = document.getElementById('reset-all-btn');
 
   // ── Tab Switching (set up FIRST, before async init) ─────────────────
@@ -53,12 +51,35 @@ document.addEventListener('DOMContentLoaded', async () => {
       const target = document.getElementById('tab-' + tab.dataset.tab);
       if (target) target.classList.add('active');
 
-      // Start waveform when calibration tab is shown
-      if (tab.dataset.tab === 'calibration' && waveformCanvas) {
+      // Start waveform when settings tab is shown (contains calibration)
+      if (tab.dataset.tab === 'settings' && waveformCanvas) {
         setTimeout(() => startWaveform(waveformCanvas), 50);
       }
     });
   });
+
+  // ── Constants (must be before init to avoid TDZ) ──────────────────────
+
+  const placeholders = {
+    spotify: 'spotify:track:4uLU6hMCjMI75M1A2tKUQC',
+    apple: 'https://music.apple.com/album/...',
+    youtube: 'https://youtube.com/watch?v=...',
+    custom: 'https://example.com/stream'
+  };
+
+  const serviceCards = document.querySelectorAll('.service-card');
+  const songPreview = document.getElementById('song-preview');
+  const songArt = document.getElementById('song-art');
+  const songTitle = document.getElementById('song-title');
+  const songArtist = document.getElementById('song-artist');
+  let previewTimeout = null;
+
+  const servicePlaceholders = {
+    'spotify': 'Paste a Spotify track link...',
+    'apple': 'Paste an Apple Music link...',
+    'youtube': 'Paste a YouTube video link...',
+    'custom': 'Paste any URL...',
+  };
 
   // ── Init ──────────────────────────────────────────────────────────────
 
@@ -72,8 +93,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   populateMusic();
   populateApps();
   populateCalibration();
-  populateGeneral();
-  // Don't start waveform here — canvas is hidden. Start when calibration tab is opened.
+  populateSettings();
+  // Don't start waveform here — canvas is hidden. Start when settings tab is opened.
 
   // ── Close ─────────────────────────────────────────────────────────────
 
@@ -82,13 +103,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // ── Music Tab ─────────────────────────────────────────────────────────
-
-  const placeholders = {
-    spotify: 'spotify:track:4uLU6hMCjMI75M1A2tKUQC',
-    apple: 'https://music.apple.com/album/...',
-    youtube: 'https://youtube.com/watch?v=...',
-    custom: 'https://example.com/stream'
-  };
 
   function populateMusic() {
     if (settings.music) {
@@ -110,19 +124,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   musicService.addEventListener('change', updateMusicPlaceholder);
 
   // ── Service Card Selection ──────────────────────────────────────────
-  const serviceCards = document.querySelectorAll('.service-card');
-  const songPreview = document.getElementById('song-preview');
-  const songArt = document.getElementById('song-art');
-  const songTitle = document.getElementById('song-title');
-  const songArtist = document.getElementById('song-artist');
-  let previewTimeout = null;
-
-  const servicePlaceholders = {
-    'spotify': 'Paste a Spotify track link...',
-    'apple': 'Paste an Apple Music link...',
-    'youtube': 'Paste a YouTube video link...',
-    'custom': 'Paste any URL...',
-  };
 
   serviceCards.forEach(card => {
     card.addEventListener('click', () => {
@@ -205,9 +206,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function populateApps() {
     windowEntries.innerHTML = '';
-    const windows = settings.windows || [{ url: '', monitor: 1 }];
-    windows.forEach(w => addWindowEntry(w.url, w.monitor));
+    const windows = settings.windows || [];
+    if (windows.length > 0) {
+      windows.forEach(w => addWindowEntry(w.url || '', w.monitor || 1));
+    }
     updateAddButton();
+    console.log('[Settings] Populated apps:', windows.length, 'entries');
   }
 
   function addWindowEntry(url = '', monitor = 1) {
@@ -216,70 +220,76 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const urlInput = document.createElement('input');
     urlInput.type = 'text';
-    urlInput.placeholder = 'https://example.com';
+    urlInput.placeholder = 'Paste a website URL (e.g. https://google.com)';
     urlInput.value = url;
-
-    const monitorSelect = document.createElement('select');
-    displays.forEach(d => {
-      const opt = document.createElement('option');
-      opt.value = d.id;
-      opt.textContent = d.name || ('Display ' + d.id);
-      monitorSelect.appendChild(opt);
-    });
-    if (displays.length === 0) {
-      const opt = document.createElement('option');
-      opt.value = 1;
-      opt.textContent = 'Display 1';
-      monitorSelect.appendChild(opt);
-    }
-    monitorSelect.value = monitor;
 
     const removeBtn = document.createElement('button');
     removeBtn.className = 'remove-btn';
     removeBtn.textContent = '\u00D7';
     removeBtn.addEventListener('click', () => {
-      if (windowEntries.children.length > 1) {
-        entry.remove();
-        updateAddButton();
-      }
+      entry.remove();
+      updateAddButton();
     });
 
     entry.appendChild(urlInput);
-    entry.appendChild(monitorSelect);
     entry.appendChild(removeBtn);
     windowEntries.appendChild(entry);
+    console.log('[Settings] Added window entry:', url || '(empty)');
   }
 
   function updateAddButton() {
     addWindowBtn.disabled = windowEntries.children.length >= 6;
   }
 
-  addWindowBtn.addEventListener('click', () => {
-    if (windowEntries.children.length < 6) {
-      addWindowEntry();
-      updateAddButton();
-    }
+  if (addWindowBtn) {
+    addWindowBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      console.log('[Settings] Add website clicked, current entries:', windowEntries.children.length);
+      if (windowEntries.children.length < 6) {
+        addWindowEntry();
+        updateAddButton();
+      }
+    });
+  }
+
+  // ── Quick Links ─────────────────────────────────────────────────────
+  const quickLinkBtns = document.querySelectorAll('.quick-pick-btn[data-url]');
+  console.log('[Settings] Found', quickLinkBtns.length, 'quick-link buttons');
+  quickLinkBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const url = btn.dataset.url;
+      console.log('[Settings] Quick link clicked:', url);
+      if (url && windowEntries.children.length < 6) {
+        addWindowEntry(url, 1);
+        updateAddButton();
+      }
+    });
   });
 
-  // ── Calibration Tab ───────────────────────────────────────────────────
+  // ── Calibration ─────────────────────────────────────────────────────
 
   function populateCalibration() {
     const threshold = settings.threshold || 0.42;
     currentThresholdEl.textContent = threshold.toFixed(2);
   }
 
-  recalibrateBtn.addEventListener('click', () => {
-    calibrating = true;
-    clapCount = 0;
-    calibrationPeaks = [];
-    calibrationIdle.style.display = 'none';
-    calibrationDone.style.display = 'none';
-    calibrationActive.style.display = 'block';
-    updateClapDots();
-    calibrationPrompt.textContent = 'Clap 3 times. Waiting for claps...';
-    window.onix.startCalibration();
-    startWaveform(waveformCanvasActive);
-  });
+  if (recalibrateBtn) {
+    recalibrateBtn.addEventListener('click', () => {
+      console.log('[Settings] Re-calibrate clicked');
+      calibrating = true;
+      clapCount = 0;
+      calibrationPeaks = [];
+      calibrationIdle.style.display = 'none';
+      calibrationDone.style.display = 'none';
+      calibrationActive.style.display = 'block';
+      updateClapDots();
+      calibrationPrompt.textContent = 'Clap 3 times. Waiting for claps...';
+      window.onix.startCalibration();
+      startWaveform(waveformCanvasActive);
+    });
+  }
 
   cancelCalibrationBtn.addEventListener('click', () => {
     calibrating = false;
@@ -319,9 +329,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       settings.threshold = newThreshold;
       newThresholdEl.textContent = newThreshold.toFixed(2);
       currentThresholdEl.textContent = newThreshold.toFixed(2);
-
-      // Update sensitivity slider range
-      updateSensitivityRange(newThreshold);
+      // Update sensitivity slider too
+      if (sensitivitySlider) {
+        sensitivitySlider.value = newThreshold;
+        sensitivityValue.textContent = newThreshold.toFixed(2);
+      }
+      console.log('[Settings] Calibration done, new threshold:', newThreshold);
 
       setTimeout(() => {
         calibrationActive.style.display = 'none';
@@ -375,37 +388,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     draw();
   }
 
-  // ── General Tab ───────────────────────────────────────────────────────
+  // ── Settings Tab (merged) ───────────────────────────────────────────
 
-  function populateGeneral() {
+  function populateSettings() {
     launchAtLogin.checked = settings.launchAtLogin || false;
-    showCounter.checked = settings.showCounter !== undefined ? settings.showCounter : true;
-
-    const threshold = settings.threshold || 0.42;
-    updateSensitivityRange(threshold);
-  }
-
-  function updateSensitivityRange(threshold) {
-    const min = Math.round(threshold * 0.5 * 100) / 100;
-    const max = Math.round(threshold * 1.5 * 100) / 100;
-    sensitivitySlider.min = min;
-    sensitivitySlider.max = max;
-    sensitivitySlider.step = 0.01;
-    sensitivitySlider.value = threshold;
-    sensitivityValue.textContent = threshold.toFixed(2);
-  }
-
-  sensitivitySlider.addEventListener('input', () => {
-    const val = parseFloat(sensitivitySlider.value);
-    sensitivityValue.textContent = val.toFixed(2);
-    settings.threshold = val;
-  });
-
-  resetCounterBtn.addEventListener('click', () => {
-    if (confirm('Reset the clap counter to 0?')) {
-      settings.clapCount = 0;
+    if (sensitivitySlider) {
+      sensitivitySlider.value = settings.threshold || 0.42;
+      sensitivityValue.textContent = (settings.threshold || 0.42).toFixed(2);
     }
-  });
+  }
+
+  if (sensitivitySlider) {
+    sensitivitySlider.addEventListener('input', () => {
+      const val = parseFloat(sensitivitySlider.value);
+      sensitivityValue.textContent = val.toFixed(2);
+      settings.threshold = val;
+    });
+  }
 
   resetAllBtn.addEventListener('click', () => {
     if (confirm('This will reset all settings to defaults. Are you sure?')) {
@@ -414,7 +413,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         windows: [{ url: '', monitor: 1 }],
         threshold: 0.42,
         launchAtLogin: false,
-        showCounter: true,
         onboardingComplete: false,
         clapCount: 0
       };
@@ -436,17 +434,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const entries = windowEntries.querySelectorAll('.window-entry');
     settings.windows = Array.from(entries).map(entry => {
       const urlInput = entry.querySelector('input[type="text"]');
-      const monitorSelect = entry.querySelector('select');
       return {
-        url: urlInput.value,
-        monitor: parseInt(monitorSelect.value, 10)
+        url: urlInput ? urlInput.value : '',
+        monitor: 1
       };
-    });
+    }).filter(w => w.url.trim() !== '');
 
-    // Collect general
+    // Collect settings
     settings.launchAtLogin = launchAtLogin.checked;
-    settings.showCounter = showCounter.checked;
-    settings.threshold = parseFloat(sensitivitySlider.value);
 
     // Save
     window.onix.saveAllSettings(settings);

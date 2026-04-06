@@ -478,6 +478,12 @@ ipcMain.handle('save-all-settings', (_event, data) => {
   for (const [key, value] of Object.entries(data)) {
     store.set(key, value);
   }
+
+  // Set launch at login
+  if (data.launchAtLogin !== undefined) {
+    app.setLoginItemSettings({ openAtLogin: data.launchAtLogin });
+  }
+
   return true;
 });
 
@@ -757,7 +763,7 @@ ipcMain.handle('validate-license', async (_event, key) => {
 });
 
 ipcMain.handle('buy-license', () => {
-  shell.openExternal('https://onixclap.lemonsqueezy.com/checkout/buy/fec39cca-8b9c-459b-9135-797cd88f33f8');
+  shell.openExternal('https://onixclap.lemonsqueezy.com/checkout/buy/569ae087-31bf-4063-857f-d3ea40f51724');
   return true;
 });
 
@@ -902,6 +908,10 @@ app.on('ready', async () => {
   // Initialize settings store
   initStore();
   console.log('[Onix] Store initialized');
+
+  // Sync launch at login setting with OS
+  const loginSettings = app.getLoginItemSettings();
+  store.set('launchAtLogin', loginSettings.openAtLogin);
 
   // Set app icon in dock
   const appIcon = nativeImage.createFromPath(path.join(__dirname, 'src', 'assets', 'onix.icns'));

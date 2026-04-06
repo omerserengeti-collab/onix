@@ -329,7 +329,7 @@ input[type="range"]::-webkit-slider-thumb {
 .service-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 8px;
 }
 
 .service-card {
@@ -340,7 +340,7 @@ input[type="range"]::-webkit-slider-thumb {
   background: #2a2a2a;
   border: 2px solid #3a3a3a;
   border-radius: 12px;
-  padding: 14px 10px;
+  padding: 10px 8px;
   cursor: pointer;
   transition: border-color 0.2s, background 0.2s, transform 0.15s, box-shadow 0.2s;
   font-family: 'Inter', sans-serif;
@@ -374,7 +374,7 @@ input[type="range"]::-webkit-slider-thumb {
   background: rgba(159, 210, 93, 0.08);
 }
 
-.service-logo { width: 28px; height: 28px; }
+.service-logo { width: 22px; height: 22px; }
 .service-name {
   font-size: 12px;
   font-weight: 600;
@@ -426,11 +426,6 @@ input[type="range"]::-webkit-slider-thumb {
 
 .window-entry input[type="text"] {
   flex: 1;
-}
-
-.window-entry select {
-  width: 140px;
-  flex-shrink: 0;
 }
 
 .remove-btn {
@@ -583,4 +578,67 @@ canvas {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+
+/* Quick Picks (matching onboarding style) */
+.quick-picks {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.quick-pick-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: #2a2a2a;
+  border: 1.5px solid #3a3a3a;
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
+  min-width: 72px;
+}
+
+.quick-pick-btn:hover {
+  background: #333;
+  border-color: #9FD25D;
+  transform: translateY(-2px);
+}
+
+.quick-pick-btn .qp-icon-svg {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.quick-pick-btn .qp-label {
+  font-size: 11px;
+  color: #999;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.quick-pick-btn:hover .qp-label {
+  color: #fff;
+}
+
+/* Keep quick-link-btn working on the new buttons */
+.quick-link-btn {
+  font-family: 'Inter', sans-serif;
+}
+
+.qp-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: contain;
+}
+
+.qp-fallback {
+  font-size: 24px;
+  line-height: 28px;
 }
