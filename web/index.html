@@ -177,19 +177,21 @@
 
     /* ─── DEMO VIDEO ─── */
     .demo-video {
-      padding: 80px 0;
-      text-align: center;
+      padding: 60px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
 
     .demo-video video {
-      width: 320px;
-      height: 568px;
-      border-radius: 24px;
-      object-fit: cover;
-      border: 1px solid rgba(159, 210, 93, 0.25);
-      box-shadow: 0 0 80px rgba(159, 210, 93, 0.1);
+      width: 800px;
+      max-width: 85vw;
+      height: auto;
+      border-radius: 16px;
+      border: 1px solid rgba(159, 210, 93, 0.2);
+      box-shadow: 0 0 60px rgba(159, 210, 93, 0.08);
       display: block;
-      margin: 0 auto;
     }
 
     /* ─── HOW IT WORKS ─── */
@@ -521,9 +523,8 @@
 
   <!-- DEMO VIDEO -->
   <section class="demo-video">
-    <div class="container">
-      <video controls muted playsinline src="assets/demo.mp4"></video>
-    </div>
+    <h2 style="text-align: center; font-size: 28px; font-weight: 300; color: white; margin-bottom: 24px; letter-spacing: 0.02em;">See it in action</h2>
+    <video controls muted playsinline src="assets/demo.mp4"></video>
   </section>
 
   <!-- HOW IT WORKS -->
