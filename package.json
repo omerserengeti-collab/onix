@@ -18,7 +18,9 @@
       "target": [
         "dmg"
       ],
-      "identity": null,
+      "identity": "-",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
       "extendInfo": {
         "NSMicrophoneUsageDescription": "Onix needs microphone access to detect your claps and launch your apps."
       }
@@ -47,7 +49,8 @@
         "width": 540,
         "height": 380
       },
-      "title": "Install Onix"
+      "title": "Install Onix",
+      "sign": false
     },
     "publish": {
       "provider": "github",
