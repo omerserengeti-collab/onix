@@ -610,11 +610,15 @@
   <section class="gatekeeper">
     <div class="container">
       <div class="gatekeeper-box">
-        <h2>First launch on Mac</h2>
-        <p>Since Onix isn't from the App Store, macOS will show a security warning. Here's how to open it:</p>
+        <h2>How to open Onix</h2>
+        <p style="font-size:16px;color:#ffffff;">macOS may block the app on first launch. Here's how to open it:</p>
         <div class="gk-images">
           <img src="assets/gatekeeper-1.png" alt="Step 1: Open Privacy and Security settings">
           <img src="assets/gatekeeper-2.png" alt="Step 2: Click Open Anyway">
+        </div>
+        <div class="terminal-copy" style="margin-top:24px;text-align:center;">
+          <button type="button" id="copy-terminal-cmd" class="btn btn-primary" onclick="(function(btn){var cmd='xattr -rd com.apple.quarantine /Applications/Onix.app';navigator.clipboard.writeText(cmd).then(function(){var o=btn.innerText;btn.innerText='✅ Copied!';setTimeout(function(){btn.innerText=o;},2000);});})(this);">📋 Copy terminal command</button>
+          <p style="font-size:14px;color:rgba(255,255,255,0.7);margin-top:12px;max-width:520px;margin-left:auto;margin-right:auto;">Paste this in Terminal after moving Onix to your Applications folder. This removes the download restriction.</p>
         </div>
         <p class="gk-note">You only need to do this once. Apple Developer certificate coming soon.</p>
       </div>
