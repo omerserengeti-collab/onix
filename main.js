@@ -50,6 +50,15 @@ let isCalibrationMode = false;
 let showingPaywall = false;
 let suppressBlurHide = false;
 
+// ─── Spotify-aware threshold ─────────────────────────────────────────────────
+const SPOTIFY_THRESHOLD_MULTIPLIER = 2.5; // multiply clap threshold while Spotify is playing
+const SPOTIFY_POLL_INTERVAL_MS = 500;
+const SPOTIFY_MAX_ERRORS = 5;
+let spotifyPollInterval = null;
+let spotifyPollInFlight = false;
+let spotifyErrorCount = 0;
+let spotifyLastMultiplier = 1.0;
+
 const preloadPath = path.join(__dirname, 'preload.js');
 const paywallPreloadPath = path.join(__dirname, 'src', 'paywall', 'paywall-preload.js');
 
@@ -347,12 +356,69 @@ function showTrialExhaustedNotification() {
 
 // ─── Launch Sequence ────────────────────────────────────────────────────────────
 
+function setThresholdMultiplier(m) {
+  if (m === spotifyLastMultiplier) return;
+  spotifyLastMultiplier = m;
+  if (audioWindow && !audioWindow.isDestroyed()) {
+    audioWindow.webContents.send('set-threshold-multiplier', m);
+  }
+}
+
+function startSpotifyPolling() {
+  if (spotifyPollInterval) return; // already polling
+  spotifyErrorCount = 0;
+  console.log('[Onix] Starting Spotify state polling');
+
+  spotifyPollInterval = setInterval(() => {
+    if (spotifyPollInFlight) return; // skip if previous call hasn't returned
+    spotifyPollInFlight = true;
+
+    const script = 'if application "Spotify" is running then tell application "Spotify" to return player state as string';
+    exec(`osascript -e '${script}'`, (err, stdout) => {
+      spotifyPollInFlight = false;
+
+      if (err) {
+        spotifyErrorCount++;
+        if (spotifyErrorCount >= SPOTIFY_MAX_ERRORS) {
+          console.log('[Onix] Spotify polling: too many errors, stopping');
+          setThresholdMultiplier(1.0);
+          stopSpotifyPolling();
+        }
+        return;
+      }
+
+      spotifyErrorCount = 0;
+      const state = (stdout || '').trim();
+      if (state === 'playing') {
+        setThresholdMultiplier(SPOTIFY_THRESHOLD_MULTIPLIER);
+      } else {
+        // paused, stopped, or Spotify not running
+        setThresholdMultiplier(1.0);
+      }
+    });
+  }, SPOTIFY_POLL_INTERVAL_MS);
+}
+
+function stopSpotifyPolling() {
+  if (spotifyPollInterval) {
+    clearInterval(spotifyPollInterval);
+    spotifyPollInterval = null;
+    console.log('[Onix] Stopped Spotify state polling');
+  }
+  setThresholdMultiplier(1.0);
+}
+
 function launchSequence() {
   const settings = store.store;
   const { music, windows: wins } = settings;
 
   // t=0: Launch music
   launchMusic(music);
+
+  // Start Spotify-aware threshold polling (only relevant when spotify is the music service)
+  if (music.service === 'spotify') {
+    startSpotifyPolling();
+  }
 
   // t=3s: Launch browser windows (after Spotify is open), then stagger remaining
   setTimeout(() => {
@@ -1013,6 +1079,10 @@ app.on('ready', async () => {
 // Keep the app running when all visible windows are closed (menu bar app)
 app.on('window-all-closed', (e) => {
   // Do not quit — tray keeps the app alive
+});
+
+app.on('before-quit', () => {
+  stopSpotifyPolling();
 });
 
 app.on('activate', () => {

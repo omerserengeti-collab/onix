@@ -34,12 +34,14 @@ contextBridge.exposeInMainWorld('onix', {
 
   // ── Events from Main Process ──────────────────────────────────────────────
   onClapDetected: (callback) => ipcRenderer.on('clap-detected', (_event, data) => callback(data)),
+  onTrialRemaining: (callback) => ipcRenderer.on('trial-remaining', (_event, remaining) => callback(remaining)),
   onListeningState: (callback) => ipcRenderer.on('listening-state', (_event, enabled) => callback(enabled)),
   onAudioLevel: (callback) => ipcRenderer.on('audio-level', (_event, volume) => callback(volume)),
   onCalibrationPeak: (callback) => ipcRenderer.on('calibration-peak', (_event, volume) => callback(volume)),
   onStartCalibration: (callback) => ipcRenderer.on('start-calibration', () => callback()),
   onStopCalibration: (callback) => ipcRenderer.on('stop-calibration', () => callback()),
   onToggleListening: (callback) => ipcRenderer.on('toggle-listening', (_event, enabled) => callback(enabled)),
+  onSetThresholdMultiplier: (callback) => ipcRenderer.on('set-threshold-multiplier', (_event, m) => callback(m)),
   onSelectAudioDevice: (callback) => ipcRenderer.on('select-audio-device', (_event, deviceId) => callback(deviceId)),
   onAudioDevicesResult: (callback) => ipcRenderer.on('audio-devices-result', (_event, devices) => callback(devices)),
 

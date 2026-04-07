@@ -22,6 +22,7 @@ let stream = null;
 let isListening = false;
 let isCalibrating = false;
 let threshold = 0.42;
+let thresholdMultiplier = 1.0; // dynamically raised when Spotify is playing to avoid false triggers
 let lastTriggerTime = 0;
 let animFrameId = null;
 let levelIntervalId = null;
@@ -146,10 +147,11 @@ function startProcessing() {
       clapTimes = clapTimes.filter(t => now - t < DOUBLE_CLAP_WINDOW);
 
       // Check if volume is above threshold (potential clap)
-      const isAboveThreshold = volume > threshold;
+      const effectiveThreshold = threshold * thresholdMultiplier;
+      const isAboveThreshold = volume > effectiveThreshold;
 
       // Check ambient noise floor — if ambient is too high (music playing), ignore
-      const ambientOk = ambientLevel < threshold * AMBIENT_THRESHOLD_RATIO;
+      const ambientOk = ambientLevel < effectiveThreshold * AMBIENT_THRESHOLD_RATIO;
 
       // ── Spike sharpness detection ──
       // Claps are VERY short (< 150ms). Speech/music stay above threshold longer.
@@ -196,7 +198,7 @@ function startProcessing() {
       }
 
       // Track quiet periods between claps
-      if (!isAboveThreshold && volume < threshold * 0.35) {
+      if (!isAboveThreshold && volume < effectiveThreshold * 0.35) {
         wasQuietAfterLastClap = true;
       }
     }
@@ -297,6 +299,11 @@ window.onix.onSelectAudioDevice(async (deviceId) => {
 window.onix.onToggleListening((enabled) => {
   if (enabled) startListening();
   else stopListening();
+});
+
+window.onix.onSetThresholdMultiplier((m) => {
+  thresholdMultiplier = m;
+  console.log('[Audio] Threshold multiplier set to', m, '— effective threshold:', (threshold * m).toFixed(2));
 });
 
 window.onix.onStartCalibration(() => startCalibration());
