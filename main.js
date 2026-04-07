@@ -617,6 +617,11 @@ ipcMain.on('finish-onboarding', (_event, settings) => {
   }
   store.set('onboardingComplete', true);
 
+  // Warm up macOS Automation permission for Spotify so the OS prompt appears now, not on first clap
+  if (settings && settings.music && settings.music.service === 'spotify') {
+    exec(`osascript -e 'if application "Spotify" is running then tell application "Spotify" to return player state as string'`, () => {});
+  }
+
   // Stop calibration mode
   isCalibrationMode = false;
   if (audioWindow && !audioWindow.isDestroyed()) {
