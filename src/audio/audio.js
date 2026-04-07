@@ -39,6 +39,14 @@ let spikeStartTime = 0;
 let inSpike = false;
 const MAX_SPIKE_DURATION = 200; // clap spike must be shorter than 200ms (speech is longer)
 
+// ─── Spectral Gating (v1: rise time + spectral centroid) ──
+const MAX_RISE_TIME_MS = 30;   // peak must arrive within 30ms of spike start (claps are sharp)
+const MIN_CENTROID_HZ = 1200;  // dominant energy must be ≥1.2kHz (rejects bass/drums/door slams)
+// Spike peak tracking (used by spectral gating)
+let spikePeakVolume = 0;
+let spikePeakTime = 0;
+let spikePeakCentroid = 0;
+
 // ─── Initialize Microphone ────────────────────────────────
 async function initMicrophone(deviceId) {
   // Clean up previous stream if switching devices
@@ -97,6 +105,35 @@ function getVolume() {
     sum += data[i] * data[i];
   }
   return Math.sqrt(sum); // L2 norm — same as numpy.linalg.norm
+}
+
+// ─── Spectral Centroid (Hz) ───────────────────────────────
+// Returns the "center of mass" of the frequency spectrum.
+// Claps: 1.5–3kHz+. Bass/drums/door slams: <600Hz.
+// Fail-open: returns a high value (9999) on error so suspect claps still pass.
+function computeSpectralCentroid() {
+  if (!analyser || !audioContext) return 9999;
+  try {
+    const bins = analyser.frequencyBinCount; // 1024
+    const freqData = new Float32Array(bins);
+    analyser.getFloatFrequencyData(freqData); // dB values, typically -100..0
+    const binHz = audioContext.sampleRate / analyser.fftSize; // ~21.5 Hz
+    let weightedSum = 0;
+    let magSum = 0;
+    for (let i = 0; i < bins; i++) {
+      // Convert dB → linear magnitude. Floor very-quiet bins to 0.
+      const db = freqData[i];
+      if (db < -90) continue;
+      const mag = Math.pow(10, db / 20);
+      weightedSum += mag * (i * binHz);
+      magSum += mag;
+    }
+    if (magSum === 0) return 9999;
+    return weightedSum / magSum;
+  } catch (e) {
+    console.warn('[Audio] computeSpectralCentroid error — failing open', e);
+    return 9999;
+  }
 }
 
 // ─── Update Ambient Noise Floor ───────────────────────────
@@ -159,12 +196,28 @@ function startProcessing() {
         // Spike just started
         inSpike = true;
         spikeStartTime = now;
+        spikePeakVolume = volume;
+        spikePeakTime = now;
+        spikePeakCentroid = computeSpectralCentroid();
+      } else if (isAboveThreshold && inSpike) {
+        // Still in spike — track the peak frame and capture centroid AT the peak
+        if (volume > spikePeakVolume) {
+          spikePeakVolume = volume;
+          spikePeakTime = now;
+          spikePeakCentroid = computeSpectralCentroid();
+        }
       } else if (!isAboveThreshold && inSpike) {
         // Spike just ended — check if it was short enough to be a clap
         const spikeDuration = now - spikeStartTime;
         inSpike = false;
 
-        if (spikeDuration <= MAX_SPIKE_DURATION && wasQuietAfterLastClap && ambientOk) {
+        // ── Spectral gating: rise time + centroid ──
+        const riseTime = spikePeakTime - spikeStartTime;
+        const centroid = spikePeakCentroid;
+        const riseOk = riseTime <= MAX_RISE_TIME_MS;
+        const centroidOk = centroid >= MIN_CENTROID_HZ;
+
+        if (spikeDuration <= MAX_SPIKE_DURATION && wasQuietAfterLastClap && ambientOk && riseOk && centroidOk) {
           // This was a sharp, short spike — likely a clap!
           const lastClapTime = clapTimes.length > 0 ? clapTimes[clapTimes.length - 1] : 0;
           const timeSinceLastClap = now - lastClapTime;
@@ -174,7 +227,7 @@ function startProcessing() {
             clapTimes.push(now);
             wasQuietAfterLastClap = false;
 
-            console.log(`[Audio] Clap ${clapTimes.length}/${REQUIRED_CLAPS} detected (vol: ${volume.toFixed(2)}, duration: ${spikeDuration}ms, ambient: ${ambientLevel.toFixed(3)})`);
+            console.log(`[Audio] Clap ${clapTimes.length}/${REQUIRED_CLAPS} detected (vol: ${volume.toFixed(2)}, duration: ${spikeDuration}ms, rise: ${riseTime}ms, centroid: ${centroid.toFixed(0)}Hz, ambient: ${ambientLevel.toFixed(3)})`);
 
             // Check if we have enough claps in the window
             if (clapTimes.length >= REQUIRED_CLAPS) {
@@ -187,7 +240,11 @@ function startProcessing() {
             }
           }
         } else if (spikeDuration > MAX_SPIKE_DURATION) {
-          console.log(`[Audio] Spike ignored — too long (${spikeDuration}ms), likely speech/music`);
+          console.log(`[Audio] Spike rejected — too long (${spikeDuration}ms), likely speech/music`);
+        } else if (!riseOk) {
+          console.log(`[Audio] Spike rejected — rise too slow (${riseTime}ms > ${MAX_RISE_TIME_MS}ms), likely not a clap`);
+        } else if (!centroidOk) {
+          console.log(`[Audio] Spike rejected — centroid too low (${centroid.toFixed(0)}Hz < ${MIN_CENTROID_HZ}Hz), likely bass/drum/door slam`);
         }
       }
 
