@@ -290,7 +290,7 @@ body {
 /* Step 2: Service Cards Grid */
 .service-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 10px;
   margin-bottom: 18px;
 }
@@ -569,9 +569,22 @@ body {
 
 .clap-indicator {
   display: flex;
-  gap: 12px;
+  gap: 20px;
   justify-content: center;
   margin-bottom: 8px;
+}
+
+.clap-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.clap-value {
+  font-size: 12px;
+  color: #666;
+  font-family: 'Inter', monospace;
+  min-width: 32px;
 }
 
 .clap-dot {
@@ -619,10 +632,34 @@ body {
 
 .threshold-bar {
   height: 100%;
-  background: linear-gradient(90deg, #9FD25D, #9FD25D);
+  background: #9FD25D;
   border-radius: 4px;
-  transition: width 0.5s ease;
+  transition: width 0.5s ease, background 0.3s ease;
   width: 0%;
+}
+
+.threshold-bar.bar-red {
+  background: #f87171;
+}
+
+.threshold-bar.bar-green {
+  background: #9FD25D;
+}
+
+.threshold-bar.bar-orange {
+  background: #fb923c;
+}
+
+.success-text.text-red {
+  color: #f87171;
+}
+
+.success-text.text-green {
+  color: #4ade80;
+}
+
+.success-text.text-orange {
+  color: #fb923c;
 }
 
 .threshold-marker {
@@ -634,6 +671,36 @@ body {
   border-radius: 2px;
   transition: left 0.5s ease;
   left: 0%;
+}
+
+/* Re-calibrate button */
+.btn-recalibrate {
+  width: 32px;
+  height: 32px;
+  background: #333;
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: filter 0.2s ease;
+}
+
+.btn-recalibrate:hover {
+  filter: brightness(1.3);
+}
+
+.btn-recalibrate.hidden {
+  display: none;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* Scrollbar styling for dark theme */

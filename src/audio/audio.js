@@ -1,7 +1,7 @@
 // ─── Configuration ─────────────────────────────────────────
 const SAMPLE_RATE = 44100;
 const FFT_SIZE = 2048;        // gives us 1024 samples per analysis
-const COOLDOWN_MS = 3000;     // 3 seconds between triggers (calibration)
+const COOLDOWN_MS = 1500;     // 1.5 seconds between triggers (calibration)
 const LAUNCH_COOLDOWN_MS = 30000; // 30 seconds after a launch before listening again
 const LEVEL_INTERVAL = 50;    // send level updates every 50ms
 
@@ -12,7 +12,7 @@ const REQUIRED_CLAPS = 2;         // require 2 claps to trigger
 
 // ─── Ambient Noise Floor ──────────────────────────────────
 const AMBIENT_SAMPLES_COUNT = 60; // track ~3 seconds of ambient noise (at 50ms intervals)
-const AMBIENT_THRESHOLD_RATIO = 0.35; // ambient must be below 35% of clap threshold
+const AMBIENT_THRESHOLD_RATIO = 0.50; // ambient must be below 50% of clap threshold
 
 // ─── State ─────────────────────────────────────────────────
 let audioContext = null;
@@ -36,7 +36,7 @@ let wasQuietAfterLastClap = true;
 // Spike sharpness tracking — claps are very short spikes, speech is sustained
 let spikeStartTime = 0;
 let inSpike = false;
-const MAX_SPIKE_DURATION = 150; // clap spike must be shorter than 150ms (speech is longer)
+const MAX_SPIKE_DURATION = 200; // clap spike must be shorter than 200ms (speech is longer)
 
 // ─── Initialize Microphone ────────────────────────────────
 async function initMicrophone(deviceId) {
@@ -135,7 +135,7 @@ function startProcessing() {
 
     if (isCalibrating) {
       // Calibration mode: single clap detection with simple cooldown
-      if (volume > 0.15 && now - lastTriggerTime > COOLDOWN_MS) {
+      if (volume > 2.0 && now - lastTriggerTime > COOLDOWN_MS) {
         lastTriggerTime = now;
         window.onix.sendAudioClap(volume);
       }
@@ -196,7 +196,7 @@ function startProcessing() {
       }
 
       // Track quiet periods between claps
-      if (!isAboveThreshold && volume < threshold * 0.5) {
+      if (!isAboveThreshold && volume < threshold * 0.35) {
         wasQuietAfterLastClap = true;
       }
     }
@@ -303,12 +303,6 @@ window.onix.onStartCalibration(() => startCalibration());
 window.onix.onStopCalibration(() => stopCalibration());
 
 // ─── Auto-start ───────────────────────────────────────────
-(async () => {
-  const settings = await window.onix.getSettings();
-  if (settings.onboardingComplete) {
-    // Wait 5 seconds before starting to listen (let the app settle)
-    setTimeout(() => {
-      startListening();
-    }, 5000);
-  }
-})();
+// Note: main.js controls when to start listening (checks license/trial).
+// Audio worker only starts when it receives toggle-listening from main.js.
+// No independent auto-start here to avoid bypassing the trial/license gate.

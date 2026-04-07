@@ -25,11 +25,16 @@ function initStore() {
       onboardingComplete: false,
       clapCount: 0,
       trialClapsUsed: 0,
-      trialMax: 3,
+      trialMax: 2,
       licenseKey: '',
       licenseValid: false
     }
   });
+
+  // Migration: force trialMax to 2
+  if (store.get('trialMax') !== 2) {
+    store.set('trialMax', 2);
+  }
 }
 
 // ─── Window & Tray References ───────────────────────────────────────────────────
@@ -43,6 +48,7 @@ let paywallWindow = null;
 let isListening = false;
 let isCalibrationMode = false;
 let showingPaywall = false;
+let suppressBlurHide = false;
 
 const preloadPath = path.join(__dirname, 'preload.js');
 const paywallPreloadPath = path.join(__dirname, 'src', 'paywall', 'paywall-preload.js');
@@ -171,7 +177,7 @@ function createPopupWindow() {
 
   // Hide when focus is lost — but NOT if paywall is showing
   popupWindow.on('blur', () => {
-    if (popupWindow && popupWindow.isVisible() && !showingPaywall) {
+    if (popupWindow && popupWindow.isVisible() && !showingPaywall && !suppressBlurHide) {
       popupWindow.hide();
     }
   });
@@ -319,7 +325,7 @@ function isLicensed() {
 
 function canUseTrial() {
   const used = store.get('trialClapsUsed', 0);
-  const max = store.get('trialMax', 3);
+  const max = store.get('trialMax', 2);
   return used < max;
 }
 
@@ -366,6 +372,17 @@ function launchSequence() {
       if (process.platform === 'darwin') {
         exec('open -a "Google Chrome"');
       }
+      // Show popup above Chrome — macOS requires app.focus({steal:true}) + screen-saver level
+      setTimeout(() => {
+        if (popupWindow && !popupWindow.isDestroyed()) {
+          app.focus({ steal: true });
+          popupWindow.setAlwaysOnTop(true, 'screen-saver');
+          popupWindow.show();
+          popupWindow.moveTop();
+          suppressBlurHide = true;
+          setTimeout(() => { suppressBlurHide = false; }, 3000);
+        }
+      }, 1500);
     }, totalDelay);
   }, 3000);
 }
@@ -552,17 +569,15 @@ ipcMain.on('finish-onboarding', (_event, settings) => {
 
   createPopupWindow();
   if (isLicensed() || canUseTrial()) {
-    // Delay listening start by 5 seconds to avoid triggering on ambient noise right after setup
-    console.log('[Onix] Onboarding complete — starting countdown before listening...');
+    console.log('[Onix] Onboarding complete — starting listening...');
     if (popupWindow && !popupWindow.isDestroyed()) {
       popupWindow.show();
       popupWindow.focus();
-      popupWindow.webContents.send('countdown-start', 5);
     }
     setTimeout(() => {
       startListening();
-      console.log('[Onix] Countdown complete — now listening for double claps!');
-    }, 5000);
+      console.log('[Onix] Now listening for double claps!');
+    }, 500);
   } else {
     console.log('[Onix] Onboarding complete — trial exhausted, paywall in popup');
   }
@@ -657,35 +672,46 @@ ipcMain.on('audio-clap', (_event, volume) => {
         startListening();
         console.log('[Onix] Auto-resumed listening after cooldown.');
       }
-    }, 35000); // 35 seconds — enough for music to start and settle
+    }, 5000); // 5 seconds — quick resume after launch
     return;
   }
 
   if (canUseTrial()) {
-    // Trial available — use it, launch, then show notification
+    // Trial available — use it, launch
     consumeTrialClap();
     const count = store.get('clapCount', 0) + 1;
     store.set('clapCount', count);
+    const trialUsed = store.get('trialClapsUsed', 0);
+    const trialMax = store.get('trialMax', 2);
+    const remaining = trialMax - trialUsed;
 
     if (popupWindow && !popupWindow.isDestroyed()) {
       popupWindow.webContents.send('clap-detected', { volume, count });
+      popupWindow.webContents.send('trial-remaining', remaining);
     }
 
     stopListening();
     launchSequence();
-    console.log('[Onix] Trial clap used! Launching...');
+    console.log(`[Onix] Trial clap used! ${remaining} remaining. Launching...`);
 
-    // After a brief delay, notify — popup will show paywall automatically
+    // Quick check — resume listening or show paywall
     setTimeout(() => {
-      showTrialExhaustedNotification();
-      showingPaywall = true;
-      if (popupWindow && !popupWindow.isDestroyed()) {
-        popupWindow.setSize(380, 520);
-        popupWindow.webContents.send('show-paywall');
-        popupWindow.show();
-        popupWindow.focus();
+      if (canUseTrial()) {
+        // Still has trials — resume listening immediately
+        startListening();
+        console.log('[Onix] Auto-resumed listening (trial claps remaining).');
+      } else {
+        // All trials used — show paywall
+        showTrialExhaustedNotification();
+        showingPaywall = true;
+        if (popupWindow && !popupWindow.isDestroyed()) {
+          popupWindow.setSize(380, 520);
+          popupWindow.webContents.send('show-paywall');
+          popupWindow.show();
+          popupWindow.focus();
+        }
       }
-    }, 3000);
+    }, 4000);
     return;
   }
 

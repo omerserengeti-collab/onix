@@ -60,7 +60,7 @@
             </svg>
             <span class="service-name">Spotify</span>
           </button>
-          <button class="service-card" data-service="apple">
+          <button class="service-card" data-service="apple" style="display:none">
             <svg class="service-logo" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M9 18V5l12-2v13"/>
               <circle cx="6" cy="18" r="3"/>
@@ -184,16 +184,25 @@
           <canvas id="waveform-canvas" width="500" height="120"></canvas>
         </div>
 
-        <div class="calibration-prompt" id="calibration-prompt">Clap now &#x1F44F;</div>
+        <div class="calibration-prompt" id="calibration-prompt">Clap now</div>
 
         <div class="clap-indicator" id="clap-indicator">
-          <span class="clap-dot" data-clap="1"></span>
-          <span class="clap-dot" data-clap="2"></span>
-          <span class="clap-dot" data-clap="3"></span>
+          <div class="clap-item">
+            <span class="clap-dot" data-clap="1"></span>
+            <span class="clap-value" id="clap-value-1"></span>
+          </div>
+          <div class="clap-item">
+            <span class="clap-dot" data-clap="2"></span>
+            <span class="clap-value" id="clap-value-2"></span>
+          </div>
+          <div class="clap-item">
+            <span class="clap-dot" data-clap="3"></span>
+            <span class="clap-value" id="clap-value-3"></span>
+          </div>
         </div>
 
         <div class="calibration-success hidden" id="calibration-success">
-          <div class="success-text">&#x2705; Perfect! Sensitivity set.</div>
+          <div class="success-text" id="success-text">&#x2705; Perfect! Sensitivity set.</div>
           <div class="threshold-bar-container">
             <div class="threshold-bar" id="threshold-bar"></div>
             <div class="threshold-marker" id="threshold-marker"></div>
@@ -202,7 +211,10 @@
 
         <div class="nav-buttons">
           <button class="btn-outlined" id="btn-back-4">&larr; Back</button>
-          <button class="btn-primary" id="btn-finish" disabled>Start Onix &#x1F680;</button>
+          <div class="nav-right">
+            <button class="btn-recalibrate hidden" id="btn-recalibrate" title="Re-calibrate"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></button>
+            <button class="btn-primary" id="btn-finish" disabled>Start Onix</button>
+          </div>
         </div>
       </div>
     </div>

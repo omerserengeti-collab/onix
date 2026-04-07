@@ -29,6 +29,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const thresholdBar = document.getElementById('threshold-bar');
   const thresholdMarker = document.getElementById('threshold-marker');
   const btnFinish = document.getElementById('btn-finish');
+  const btnRecalibrate = document.getElementById('btn-recalibrate');
+  const successText = document.getElementById('success-text');
+  const clapValues = [
+    document.getElementById('clap-value-1'),
+    document.getElementById('clap-value-2'),
+    document.getElementById('clap-value-3'),
+  ];
 
   // ── Placeholders per service ───────────────────────────────────────────
   const placeholders = {
@@ -138,6 +145,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.onix.finishOnboarding(settings);
+  });
+
+  btnRecalibrate.addEventListener('click', () => {
+    stopCalibration();
+    startCalibration();
   });
 
   // ── Step 1: Hardware Check — Mic Enumeration ───────────────────────────
@@ -440,9 +452,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Reset UI
     clapDots.forEach((d) => d.classList.remove('filled'));
-    calibrationPrompt.textContent = 'Clap now \uD83D\uDC4F';
+    clapValues.forEach((v) => v.textContent = '');
+    calibrationPrompt.textContent = 'Clap now';
     calibrationSuccess.classList.add('hidden');
+    btnRecalibrate.classList.add('hidden');
     btnFinish.disabled = true;
+    // Reset bar colors
+    thresholdBar.className = 'threshold-bar';
+    thresholdBar.style.width = '0%';
+    thresholdMarker.style.left = '0%';
 
     // Set canvas resolution to match layout size
     const rect = canvas.parentElement.getBoundingClientRect();
@@ -458,35 +476,49 @@ document.addEventListener('DOMContentLoaded', () => {
     canvas.height = 120;
 
     window.onix.startCalibration();
-
-    window.onix.onAudioLevel((volume) => {
-      if (!calibrationActive) return;
-      drawWaveform(volume);
-    });
-
-    window.onix.onCalibrationPeak((peakVolume) => {
-      if (!calibrationActive) return;
-      if (claps.length >= 3) return;
-
-      claps.push(peakVolume);
-      const n = claps.length;
-
-      // Fill dot
-      clapDots[n - 1].classList.add('filled');
-
-      if (n < 3) {
-        calibrationPrompt.textContent = 'Got it! (' + n + '/3) \u2014 clap again';
-        // Brief pause then re-prompt
-        setTimeout(() => {
-          if (claps.length < 3 && calibrationActive) {
-            calibrationPrompt.textContent = 'Clap now \uD83D\uDC4F';
-          }
-        }, 1200);
-      } else {
-        onCalibrationComplete();
-      }
-    });
   }
+
+  // ── Calibration listeners (registered once, gated by calibrationActive) ──
+  window.onix.onAudioLevel((volume) => {
+    if (!calibrationActive) return;
+    drawWaveform(volume);
+  });
+
+  window.onix.onCalibrationPeak((peakVolume) => {
+    if (!calibrationActive) return;
+    if (claps.length >= 3) return;
+
+    // Guard: previous dot must be filled before accepting next clap
+    if (claps.length > 0 && !clapDots[claps.length - 1].classList.contains('filled')) return;
+
+    claps.push(peakVolume);
+    const n = claps.length;
+
+    // Fill dot and show volume value
+    clapDots[n - 1].classList.add('filled');
+    clapValues[n - 1].textContent = peakVolume.toFixed(2);
+
+    if (n < 3) {
+      // Per-clap quality feedback
+      let quality;
+      if (peakVolume < 1.5) {
+        quality = 'a bit soft, clap harder';
+      } else if (peakVolume <= 12.0) {
+        quality = 'perfect';
+      } else {
+        quality = 'a bit loud, clap softer';
+      }
+      calibrationPrompt.textContent = 'Got it (' + n + '/3) \u2014 ' + quality;
+      // Brief pause then re-prompt
+      setTimeout(() => {
+        if (claps.length < 3 && calibrationActive) {
+          calibrationPrompt.textContent = 'Clap now';
+        }
+      }, 1200);
+    } else {
+      onCalibrationComplete();
+    }
+  });
 
   function onCalibrationComplete() {
     const minClap = Math.min(...claps);
@@ -494,9 +526,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     calibrationPrompt.textContent = '';
     calibrationSuccess.classList.remove('hidden');
+    btnRecalibrate.classList.remove('hidden');
 
     // Threshold bar visualization (normalize to 0-1 range, cap at 2 for display)
     const displayPct = Math.min((state.threshold / 2) * 100, 100);
+
+    // Color-code based on clap volume (same thresholds as per-clap feedback)
+    let barColor, textColor, feedbackMsg;
+    if (minClap < 1.5) {
+      barColor = 'bar-red';
+      textColor = 'text-red';
+      feedbackMsg = 'Too soft \u2014 re-calibrate and clap harder';
+    } else if (minClap <= 12.0) {
+      barColor = 'bar-green';
+      textColor = 'text-green';
+      feedbackMsg = 'You\'re all set';
+    } else {
+      barColor = 'bar-orange';
+      textColor = 'text-orange';
+      feedbackMsg = 'Too loud \u2014 re-calibrate and clap softer';
+    }
+
+    successText.textContent = feedbackMsg;
+    successText.className = 'success-text ' + textColor;
+    thresholdBar.className = 'threshold-bar ' + barColor;
+
     setTimeout(() => {
       thresholdBar.style.width = displayPct + '%';
       thresholdMarker.style.left = displayPct + '%';
