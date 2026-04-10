@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let calibrating = false;
   let clapCount = 0;
   let calibrationPeaks = [];
+  let calibrationSpectra = [];
   let audioAnimationId = null;
   let currentAudioLevel = 0;
 
@@ -294,6 +295,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       calibrating = true;
       clapCount = 0;
       calibrationPeaks = [];
+      calibrationSpectra = [];
       calibrationIdle.style.display = 'none';
       calibrationDone.style.display = 'none';
       calibrationActive.style.display = 'block';
@@ -328,10 +330,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  window.onix.onCalibrationPeak((peak) => {
+  window.onix.onCalibrationPeak((peak, spectrum) => {
     if (!calibrating) return;
     clapCount++;
     calibrationPeaks.push(peak);
+    if (spectrum) calibrationSpectra.push(spectrum);
     updateClapDots();
     calibrationPrompt.textContent = `Clap ${clapCount} of 3 detected!`;
 
@@ -340,6 +343,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       const avgPeak = calibrationPeaks.reduce((a, b) => a + b, 0) / calibrationPeaks.length;
       const newThreshold = Math.round(avgPeak * 0.7 * 100) / 100;
       settings.threshold = newThreshold;
+
+      // Compute spectral template (median of 3 spectra, bin by bin)
+      if (calibrationSpectra.length >= 3) {
+        const binCount = calibrationSpectra[0].length;
+        const template = new Array(binCount);
+        for (let i = 0; i < binCount; i++) {
+          const vals = calibrationSpectra.map(s => s[i]).sort((a, b) => a - b);
+          template[i] = vals[1]; // median of 3
+        }
+        settings.spectralTemplate = template;
+        console.log('[Settings] Spectral template computed (' + binCount + ' bins)');
+      } else {
+        settings.spectralTemplate = null;
+      }
+
       newThresholdEl.textContent = newThreshold.toFixed(2);
       currentThresholdEl.textContent = newThreshold.toFixed(2);
       // Update sensitivity slider too
@@ -425,6 +443,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         music: { service: 'spotify', url: '' },
         windows: [{ url: '', monitor: 1 }],
         threshold: 0.42,
+        spectralTemplate: null,
         launchAtLogin: false,
         onboardingComplete: false,
         clapCount: 0

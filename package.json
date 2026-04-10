@@ -1,6 +1,6 @@
 {
   "name": "onix",
-  "version": "1.2.12",
+  "version": "1.2.13",
   "description": "Clap-triggered launcher — menu bar app",
   "main": "main.js",
   "author": "Omer Elias",

@@ -1,6 +1,6 @@
 // ─── Configuration ─────────────────────────────────────────
 const SAMPLE_RATE = 44100;
-const FFT_SIZE = 2048;        // gives us 1024 samples per analysis
+const FFT_SIZE = 1024;        // 512 freq bins, ~23ms window — better for short clap transients
 const COOLDOWN_MS = 1500;     // 1.5 seconds between triggers (calibration)
 const LAUNCH_COOLDOWN_MS = 30000; // 30 seconds after a launch before listening again
 const LEVEL_INTERVAL = 50;    // send level updates every 50ms
@@ -38,6 +38,12 @@ let wasQuietAfterLastClap = true;
 let spikeStartTime = 0;
 let inSpike = false;
 const MAX_SPIKE_DURATION = 200; // clap spike must be shorter than 200ms (speech is longer)
+
+// ─── Spectral Fingerprinting ─────────────────────────────
+const SPECTRAL_MIN_BIN = 11;   // ~500 Hz  (bin = freq / (sampleRate / fftSize))
+const SPECTRAL_MAX_BIN = 186;  // ~8000 Hz
+const SPECTRAL_MATCH_THRESHOLD = 0.82;
+let spectralTemplate = null;   // Float32Array loaded from settings, or null (skip check)
 
 // ─── Initialize Microphone ────────────────────────────────
 async function initMicrophone(deviceId) {
@@ -99,6 +105,27 @@ function getVolume() {
   return Math.sqrt(sum); // L2 norm — same as numpy.linalg.norm
 }
 
+// ─── Spectral Comparison (cosine similarity, 500Hz–8kHz) ──
+function compareSpectra(live, template, minBin = SPECTRAL_MIN_BIN, maxBin = SPECTRAL_MAX_BIN) {
+  let dot = 0, normA = 0, normB = 0;
+  for (let i = minBin; i < maxBin; i++) {
+    const a = Math.pow(10, live[i] / 20);
+    const b = Math.pow(10, template[i] / 20);
+    dot += a * b;
+    normA += a * a;
+    normB += b * b;
+  }
+  const divisor = Math.sqrt(normA) * Math.sqrt(normB);
+  return divisor === 0 ? 0 : dot / divisor;
+}
+
+function captureSpectrum() {
+  if (!analyser) return null;
+  const freqData = new Float32Array(analyser.frequencyBinCount);
+  analyser.getFloatFrequencyData(freqData);
+  return freqData;
+}
+
 // ─── Update Ambient Noise Floor ───────────────────────────
 function updateAmbientLevel(volume) {
   ambientSamples.push(volume);
@@ -138,7 +165,8 @@ function startProcessing() {
       // Calibration mode: single clap detection with simple cooldown
       if (volume > 2.0 && now - lastTriggerTime > COOLDOWN_MS) {
         lastTriggerTime = now;
-        window.onix.sendAudioClap(volume);
+        const spectrum = captureSpectrum();
+        window.onix.sendAudioClap(volume, spectrum ? Array.from(spectrum) : null);
       }
     } else if (isListening) {
       // ─── Double-Clap Pattern Detection ─────────────────────
@@ -164,7 +192,22 @@ function startProcessing() {
         const spikeDuration = now - spikeStartTime;
         inSpike = false;
 
-        if (spikeDuration <= MAX_SPIKE_DURATION && wasQuietAfterLastClap && ambientOk) {
+        // Spectral fingerprint check (skip if no template — backwards compatible)
+        let spectralOk = true;
+        if (spikeDuration <= MAX_SPIKE_DURATION && wasQuietAfterLastClap && ambientOk && spectralTemplate) {
+          const freqData = captureSpectrum();
+          if (freqData) {
+            const similarity = compareSpectra(freqData, spectralTemplate);
+            spectralOk = similarity >= SPECTRAL_MATCH_THRESHOLD;
+            if (spectralOk) {
+              console.log(`[Audio] Spectral match: ${similarity.toFixed(3)}`);
+            } else {
+              console.log(`[Audio] Spike rejected — spectral mismatch: ${similarity.toFixed(3)}`);
+            }
+          }
+        }
+
+        if (spikeDuration <= MAX_SPIKE_DURATION && wasQuietAfterLastClap && ambientOk && spectralOk) {
           // This was a sharp, short spike — likely a clap!
           const lastClapTime = clapTimes.length > 0 ? clapTimes[clapTimes.length - 1] : 0;
           const timeSinceLastClap = now - lastClapTime;
@@ -181,7 +224,6 @@ function startProcessing() {
               // Double clap detected! Trigger launch
               lastTriggerTime = now;
               clapTimes = []; // reset pattern
-              ambientSamples = []; // reset ambient tracking
               window.onix.sendAudioClap(volume);
               console.log('[Audio] ✅ DOUBLE CLAP CONFIRMED — triggering launch!');
             }
@@ -225,6 +267,15 @@ async function startListening() {
   const settings = await window.onix.getSettings();
   threshold = settings.threshold || 0.42;
 
+  // Load spectral template if available (null = skip spectral check)
+  if (settings.spectralTemplate && Array.isArray(settings.spectralTemplate)) {
+    spectralTemplate = new Float32Array(settings.spectralTemplate);
+    console.log('[Audio] Spectral template loaded (' + spectralTemplate.length + ' bins)');
+  } else {
+    spectralTemplate = null;
+    console.log('[Audio] No spectral template — spectral check disabled');
+  }
+
   // Ensure minimum threshold to avoid false triggers from ambient noise
   if (threshold < 0.3) {
     console.log('[Audio] Threshold too low (' + threshold + '), clamping to 0.3');
@@ -245,8 +296,6 @@ async function startListening() {
   // Reset all detection state
   lastTriggerTime = Date.now();
   clapTimes = [];
-  ambientSamples = [];
-  ambientLevel = 0;
   wasQuietAfterLastClap = true;
 
   isListening = true;
@@ -257,7 +306,6 @@ async function startListening() {
 function stopListening() {
   isListening = false;
   clapTimes = [];
-  ambientSamples = [];
   console.log('[Audio] Listening stopped');
 }
 

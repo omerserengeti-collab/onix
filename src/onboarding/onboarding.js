@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentStep = 1;
   let displays = [];
   let claps = [];
+  let clapSpectra = [];
   let calibrationActive = false;
   let animationFrameId = null;
 
@@ -147,6 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
       music: { ...state.music },
       windows: [...state.windows],
       threshold: state.threshold,
+      spectralTemplate: state.spectralTemplate || null,
       micDeviceId: micDevice.value || null,
     };
 
@@ -455,6 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (calibrationActive) return;
     calibrationActive = true;
     claps = [];
+    clapSpectra = [];
 
     // Reset UI
     clapDots.forEach((d) => d.classList.remove('filled'));
@@ -490,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
     drawWaveform(volume);
   });
 
-  window.onix.onCalibrationPeak((peakVolume) => {
+  window.onix.onCalibrationPeak((peakVolume, spectrum) => {
     if (!calibrationActive) return;
     if (claps.length >= 3) return;
 
@@ -498,6 +501,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (claps.length > 0 && !clapDots[claps.length - 1].classList.contains('filled')) return;
 
     claps.push(peakVolume);
+    if (spectrum) clapSpectra.push(spectrum);
     const n = claps.length;
 
     // Fill dot and show volume value
@@ -529,6 +533,21 @@ document.addEventListener('DOMContentLoaded', () => {
   function onCalibrationComplete() {
     const minClap = Math.min(...claps);
     state.threshold = Math.max(minClap * 0.65, 0.3);
+
+    // Compute spectral template (median of 3 spectra, bin by bin)
+    if (clapSpectra.length >= 3) {
+      const binCount = clapSpectra[0].length;
+      const template = new Array(binCount);
+      for (let i = 0; i < binCount; i++) {
+        const vals = clapSpectra.map(s => s[i]).sort((a, b) => a - b);
+        template[i] = vals[1]; // median of 3
+      }
+      state.spectralTemplate = template;
+      console.log('[Onboarding] Spectral template computed (' + binCount + ' bins)');
+    } else {
+      state.spectralTemplate = null;
+      console.log('[Onboarding] Not enough spectra for template — skipping');
+    }
 
     calibrationPrompt.textContent = '';
     calibrationSuccess.classList.remove('hidden');
