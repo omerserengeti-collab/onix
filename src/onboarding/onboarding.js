@@ -37,6 +37,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('clap-value-3'),
   ];
 
+  // ── Default music URLs (pre-filled, user can clear and type their own) ─
+  const defaultUrls = {
+    'spotify': 'spotify:track:39shmbIHICJ2Wxnk1fPSdz',
+    'youtube': 'https://www.youtube.com/watch?v=xMaE6toi4mk',
+  };
+
   // ── Placeholders per service ───────────────────────────────────────────
   const placeholders = {
     'spotify': 'https://open.spotify.com/track/...',
@@ -233,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
       musicService.value = service;
       musicUrl.placeholder = servicePlaceholders[service] || 'Paste a URL...';
       songPreview.style.display = 'none';
-      musicUrl.value = '';
+      musicUrl.value = defaultUrls[service] || '';
       musicUrl.focus();
     });
   });
@@ -522,7 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function onCalibrationComplete() {
     const minClap = Math.min(...claps);
-    state.threshold = Math.max(minClap * 0.75, 0.3);
+    state.threshold = Math.max(minClap * 0.65, 0.3);
 
     calibrationPrompt.textContent = '';
     calibrationSuccess.classList.remove('hidden');
@@ -570,6 +576,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ── Init ───────────────────────────────────────────────────────────────
+  // Pre-fill music URL with default for the initially selected service
+  if (!musicUrl.value) {
+    musicUrl.value = defaultUrls[musicService.value] || '';
+  }
   initMicDevices();
   initDisplays();
 });

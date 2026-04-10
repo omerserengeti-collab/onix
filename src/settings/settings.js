@@ -60,6 +60,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ── Constants (must be before init to avoid TDZ) ──────────────────────
 
+  const defaultUrls = {
+    spotify: 'spotify:track:39shmbIHICJ2Wxnk1fPSdz',
+    youtube: 'https://www.youtube.com/watch?v=xMaE6toi4mk',
+  };
+
   const placeholders = {
     spotify: 'spotify:track:4uLU6hMCjMI75M1A2tKUQC',
     apple: 'https://music.apple.com/album/...',
@@ -109,6 +114,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       musicService.value = settings.music.service || 'spotify';
       musicUrl.value = settings.music.url || '';
     }
+    // If URL is empty, pre-fill with default for the current service
+    if (!musicUrl.value) {
+      musicUrl.value = defaultUrls[musicService.value] || '';
+    }
     updateMusicPlaceholder();
     syncServiceCards();
     // Show preview if URL already exists
@@ -133,6 +142,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       musicService.value = service;
       musicUrl.placeholder = servicePlaceholders[service] || 'Paste a URL...';
       if (songPreview) songPreview.style.display = 'none';
+      // Pre-fill default if field is empty
+      if (!musicUrl.value.trim()) {
+        musicUrl.value = defaultUrls[service] || '';
+      }
     });
   });
 
