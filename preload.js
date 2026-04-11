@@ -30,14 +30,14 @@ contextBridge.exposeInMainWorld('onix', {
 
   // ── Audio (sent from the audio worker window to main) ─────────────────────
   sendAudioLevel: (volume) => ipcRenderer.send('audio-level', volume),
-  sendAudioClap: (volume, spectrum) => ipcRenderer.send('audio-clap', volume, spectrum),
+  sendAudioClap: (volume, spectrum, features) => ipcRenderer.send('audio-clap', volume, spectrum, features),
 
   // ── Events from Main Process ──────────────────────────────────────────────
   onClapDetected: (callback) => ipcRenderer.on('clap-detected', (_event, data) => callback(data)),
   onTrialRemaining: (callback) => ipcRenderer.on('trial-remaining', (_event, remaining) => callback(remaining)),
   onListeningState: (callback) => ipcRenderer.on('listening-state', (_event, enabled) => callback(enabled)),
   onAudioLevel: (callback) => ipcRenderer.on('audio-level', (_event, volume) => callback(volume)),
-  onCalibrationPeak: (callback) => ipcRenderer.on('calibration-peak', (_event, volume, spectrum) => callback(volume, spectrum)),
+  onCalibrationPeak: (callback) => ipcRenderer.on('calibration-peak', (_event, volume, spectrum, features) => callback(volume, spectrum, features)),
   onStartCalibration: (callback) => ipcRenderer.on('start-calibration', () => callback()),
   onStopCalibration: (callback) => ipcRenderer.on('stop-calibration', () => callback()),
   onToggleListening: (callback) => ipcRenderer.on('toggle-listening', (_event, enabled) => callback(enabled)),

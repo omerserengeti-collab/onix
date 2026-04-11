@@ -711,14 +711,14 @@ ipcMain.on('audio-level', (_event, volume) => {
 });
 
 // Clap detected from the audio window
-ipcMain.on('audio-clap', (_event, volume, spectrum) => {
+ipcMain.on('audio-clap', (_event, volume, spectrum, features) => {
   if (isCalibrationMode) {
-    // During calibration — forward as calibration-peak to onboarding/settings (with spectrum)
+    // During calibration — forward as calibration-peak to onboarding/settings (with spectrum + features)
     if (onboardingWindow && !onboardingWindow.isDestroyed()) {
-      onboardingWindow.webContents.send('calibration-peak', volume, spectrum);
+      onboardingWindow.webContents.send('calibration-peak', volume, spectrum, features);
     }
     if (settingsWindow && !settingsWindow.isDestroyed()) {
-      settingsWindow.webContents.send('calibration-peak', volume, spectrum);
+      settingsWindow.webContents.send('calibration-peak', volume, spectrum, features);
     }
     return;
   }

@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let displays = [];
   let claps = [];
   let clapSpectra = [];
+  let clapFeatures = [];  // { flatness, subBandRatio, crest } per clap
   let calibrationActive = false;
   let animationFrameId = null;
 
@@ -37,6 +38,21 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('clap-value-2'),
     document.getElementById('clap-value-3'),
   ];
+
+  // ── Spectral comparison (cosine similarity, 500Hz–8kHz) ────────────────
+  function compareSpectra(a, b, minBin = 23, maxBin = 372) {
+    let dot = 0, normA = 0, normB = 0;
+    const limit = Math.min(maxBin, a.length, b.length);
+    for (let i = minBin; i < limit; i++) {
+      const va = Math.pow(10, a[i] / 20);
+      const vb = Math.pow(10, b[i] / 20);
+      dot += va * vb;
+      normA += va * va;
+      normB += vb * vb;
+    }
+    const divisor = Math.sqrt(normA) * Math.sqrt(normB);
+    return divisor === 0 ? 0 : dot / divisor;
+  }
 
   // ── Default music URLs (pre-filled, user can clear and type their own) ─
   const defaultUrls = {
@@ -149,6 +165,11 @@ document.addEventListener('DOMContentLoaded', () => {
       windows: [...state.windows],
       threshold: state.threshold,
       spectralTemplate: state.spectralTemplate || null,
+      spectralThreshold: state.spectralThreshold || null,
+      minFlatness: state.minFlatness || null,
+      minSubBandRatio: state.minSubBandRatio || null,
+      maxSubBandRatio: state.maxSubBandRatio || null,
+      minCrest: state.minCrest || null,
       micDeviceId: micDevice.value || null,
     };
 
@@ -458,6 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
     calibrationActive = true;
     claps = [];
     clapSpectra = [];
+    clapFeatures = [];
 
     // Reset UI
     clapDots.forEach((d) => d.classList.remove('filled'));
@@ -493,7 +515,7 @@ document.addEventListener('DOMContentLoaded', () => {
     drawWaveform(volume);
   });
 
-  window.onix.onCalibrationPeak((peakVolume, spectrum) => {
+  window.onix.onCalibrationPeak((peakVolume, spectrum, features) => {
     if (!calibrationActive) return;
     if (claps.length >= 3) return;
 
@@ -502,6 +524,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     claps.push(peakVolume);
     if (spectrum) clapSpectra.push(spectrum);
+    if (features) clapFeatures.push(features);
     const n = claps.length;
 
     // Fill dot and show volume value
@@ -543,10 +566,46 @@ document.addEventListener('DOMContentLoaded', () => {
         template[i] = vals[1]; // median of 3
       }
       state.spectralTemplate = template;
-      console.log('[Onboarding] Spectral template computed (' + binCount + ' bins)');
+      // Compute adaptive threshold from how similar the 3 claps are to the template
+      const sims = clapSpectra.map(s => compareSpectra(s, template));
+      const avgSim = sims.reduce((a, b) => a + b, 0) / sims.length;
+      state.spectralThreshold = Math.round(avgSim * 0.80 * 1000) / 1000;
+      console.log('[Onboarding] Spectral template computed (' + binCount + ' bins), similarities: [' + sims.map(s => s.toFixed(3)).join(', ') + '], adaptive threshold: ' + state.spectralThreshold);
     } else {
       state.spectralTemplate = null;
+      state.spectralThreshold = null;
       console.log('[Onboarding] Not enough spectra for template — skipping');
+    }
+
+    // Compute acoustic feature thresholds from the 3 calibration claps
+    if (clapFeatures.length >= 3) {
+      const flatVals = clapFeatures.map(f => f.flatness).filter(v => v != null);
+      const ratioVals = clapFeatures.map(f => f.subBandRatio).filter(v => v != null);
+      const crestVals = clapFeatures.map(f => f.crest).filter(v => v != null);
+
+      if (flatVals.length >= 3) {
+        state.minFlatness = Math.round(Math.min(...flatVals) * 0.85 * 10000) / 10000;
+      }
+      if (ratioVals.length >= 3) {
+        state.minSubBandRatio = Math.round(Math.min(...ratioVals) * 0.7 * 100) / 100;
+        state.maxSubBandRatio = Math.round(Math.max(...ratioVals) * 1.3 * 100) / 100;
+      }
+      if (crestVals.length >= 3) {
+        state.minCrest = Math.round(Math.min(...crestVals) * 0.70 * 100) / 100;
+      }
+
+      console.log('[Onboarding] Feature thresholds — flatness>=' + state.minFlatness +
+        ', ratio: ' + state.minSubBandRatio + '-' + state.maxSubBandRatio +
+        ', crest>=' + state.minCrest +
+        ' | raw: flat=[' + flatVals.map(v => v.toFixed(3)).join(',') +
+        '], ratio=[' + ratioVals.map(v => v.toFixed(2)).join(',') +
+        '], crest=[' + crestVals.map(v => v.toFixed(2)).join(',') + ']');
+    } else {
+      state.minFlatness = null;
+      state.minSubBandRatio = null;
+      state.maxSubBandRatio = null;
+      state.minCrest = null;
+      console.log('[Onboarding] Not enough feature data — acoustic checks disabled');
     }
 
     calibrationPrompt.textContent = '';

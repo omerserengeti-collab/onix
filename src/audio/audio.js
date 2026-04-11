@@ -1,6 +1,6 @@
 // ─── Configuration ─────────────────────────────────────────
 const SAMPLE_RATE = 44100;
-const FFT_SIZE = 1024;        // 512 freq bins, ~23ms window — better for short clap transients
+const FFT_SIZE = 2048;        // 1024 freq bins, ~46ms window
 const COOLDOWN_MS = 1500;     // 1.5 seconds between triggers (calibration)
 const LAUNCH_COOLDOWN_MS = 30000; // 30 seconds after a launch before listening again
 const LEVEL_INTERVAL = 50;    // send level updates every 50ms
@@ -40,10 +40,25 @@ let inSpike = false;
 const MAX_SPIKE_DURATION = 200; // clap spike must be shorter than 200ms (speech is longer)
 
 // ─── Spectral Fingerprinting ─────────────────────────────
-const SPECTRAL_MIN_BIN = 11;   // ~500 Hz  (bin = freq / (sampleRate / fftSize))
-const SPECTRAL_MAX_BIN = 186;  // ~8000 Hz
-const SPECTRAL_MATCH_THRESHOLD = 0.82;
+const SPECTRAL_MIN_BIN = 23;   // ~500 Hz  (bin = freq / (sampleRate / fftSize), 21.5 Hz/bin)
+const SPECTRAL_MAX_BIN = 372;  // ~8000 Hz
+const SPECTRAL_MATCH_THRESHOLD = 0.91;
 let spectralTemplate = null;   // Float32Array loaded from settings, or null (skip check)
+let spectralThreshold = SPECTRAL_MATCH_THRESHOLD; // adaptive, loaded from settings or fallback
+let spikeSpectrum = null;      // captured at spike start for comparison at spike end
+let spikeTimeData = null;      // time-domain data captured at spike start for crest factor
+
+// ─── Acoustic Feature Thresholds (adaptive, from calibration) ─
+const FLATNESS_ANALYSIS_MIN_BIN = 10;  // ~200 Hz
+const FLATNESS_ANALYSIS_MAX_BIN = 372; // ~8000 Hz
+const SUBBAND_HIGH_MIN = 93;   // ~2000 Hz
+const SUBBAND_HIGH_MAX = 279;  // ~6000 Hz
+const SUBBAND_LOW_MIN = 5;     // ~100 Hz
+const SUBBAND_LOW_MAX = 23;    // ~500 Hz
+let minFlatness = null;        // from calibration, or null (skip check)
+let minSubBandRatio = null;    // from calibration
+let maxSubBandRatio = null;    // from calibration
+let minCrest = null;           // from calibration
 
 // ─── Initialize Microphone ────────────────────────────────
 async function initMicrophone(deviceId) {
@@ -126,6 +141,52 @@ function captureSpectrum() {
   return freqData;
 }
 
+// ─── Spectral Flatness (Wiener entropy) ──────────────────
+// High = noise-like (claps). Low = tonal (voice, music, snaps).
+function spectralFlatness(freqData, minBin = FLATNESS_ANALYSIS_MIN_BIN, maxBin = FLATNESS_ANALYSIS_MAX_BIN) {
+  let logSum = 0, linSum = 0, count = 0;
+  for (let i = minBin; i < maxBin; i++) {
+    const mag = Math.pow(10, freqData[i] / 20);
+    if (mag > 0) { logSum += Math.log(mag); count++; }
+    linSum += mag;
+  }
+  if (count === 0 || linSum === 0) return 0;
+  return Math.exp(logSum / count) / (linSum / count);
+}
+
+// ─── Sub-band Energy Ratio (high 2–6kHz / low 100–500Hz) ─
+// Claps: mid-range. Knocks: too dark. Snaps: too bright.
+function subBandRatio(freqData) {
+  let highEnergy = 0, lowEnergy = 0;
+  for (let i = SUBBAND_HIGH_MIN; i < SUBBAND_HIGH_MAX; i++) {
+    highEnergy += Math.pow(10, freqData[i] / 10); // power (dB → linear power)
+  }
+  for (let i = SUBBAND_LOW_MIN; i < SUBBAND_LOW_MAX; i++) {
+    lowEnergy += Math.pow(10, freqData[i] / 10);
+  }
+  return lowEnergy === 0 ? 999 : highEnergy / lowEnergy;
+}
+
+// ─── Crest Factor (peak / RMS from time-domain data) ─────
+// Claps: very high (sharp impulse). Sustained sounds: low.
+function crestFactor(timeData) {
+  let peak = 0, sum = 0;
+  for (let i = 0; i < timeData.length; i++) {
+    const abs = Math.abs(timeData[i]);
+    if (abs > peak) peak = abs;
+    sum += timeData[i] * timeData[i];
+  }
+  const rms = Math.sqrt(sum / timeData.length);
+  return rms === 0 ? 0 : peak / rms;
+}
+
+function captureTimeDomain() {
+  if (!analyser) return null;
+  const data = new Float32Array(analyser.fftSize);
+  analyser.getFloatTimeDomainData(data);
+  return data;
+}
+
 // ─── Update Ambient Noise Floor ───────────────────────────
 function updateAmbientLevel(volume) {
   ambientSamples.push(volume);
@@ -166,7 +227,13 @@ function startProcessing() {
       if (volume > 2.0 && now - lastTriggerTime > COOLDOWN_MS) {
         lastTriggerTime = now;
         const spectrum = captureSpectrum();
-        window.onix.sendAudioClap(volume, spectrum ? Array.from(spectrum) : null);
+        const timeData = captureTimeDomain();
+        const features = {
+          flatness: spectrum ? spectralFlatness(spectrum) : null,
+          subBandRatio: spectrum ? subBandRatio(spectrum) : null,
+          crest: timeData ? crestFactor(timeData) : null,
+        };
+        window.onix.sendAudioClap(volume, spectrum ? Array.from(spectrum) : null, features);
       }
     } else if (isListening) {
       // ─── Double-Clap Pattern Detection ─────────────────────
@@ -184,30 +251,55 @@ function startProcessing() {
       // ── Spike sharpness detection ──
       // Claps are VERY short (< 150ms). Speech/music stay above threshold longer.
       if (isAboveThreshold && !inSpike) {
-        // Spike just started
+        // Spike just started — capture spectrum NOW (peak energy frame)
         inSpike = true;
         spikeStartTime = now;
+        spikeSpectrum = spectralTemplate ? captureSpectrum() : null;
+        spikeTimeData = (minCrest !== null) ? captureTimeDomain() : null;
       } else if (!isAboveThreshold && inSpike) {
         // Spike just ended — check if it was short enough to be a clap
         const spikeDuration = now - spikeStartTime;
         inSpike = false;
 
-        // Spectral fingerprint check (skip if no template — backwards compatible)
+        // ── Acoustic feature gates (all fail-open if calibration data missing) ──
         let spectralOk = true;
-        if (spikeDuration <= MAX_SPIKE_DURATION && wasQuietAfterLastClap && ambientOk && spectralTemplate) {
-          const freqData = captureSpectrum();
-          if (freqData) {
-            const similarity = compareSpectra(freqData, spectralTemplate);
-            spectralOk = similarity >= SPECTRAL_MATCH_THRESHOLD;
-            if (spectralOk) {
-              console.log(`[Audio] Spectral match: ${similarity.toFixed(3)}`);
-            } else {
-              console.log(`[Audio] Spike rejected — spectral mismatch: ${similarity.toFixed(3)}`);
-            }
+        let flatnessOk = true;
+        let ratioOk = true;
+        let crestOk = true;
+
+        if (spikeDuration <= MAX_SPIKE_DURATION && wasQuietAfterLastClap && ambientOk) {
+          // Spectral similarity
+          const similarity = (spectralTemplate && spikeSpectrum) ? compareSpectra(spikeSpectrum, spectralTemplate) : null;
+          if (similarity !== null) {
+            spectralOk = similarity >= spectralThreshold;
           }
+
+          // Spectral flatness
+          let flatVal = null;
+          if (minFlatness !== null && spikeSpectrum) {
+            flatVal = spectralFlatness(spikeSpectrum);
+            flatnessOk = flatVal >= minFlatness;
+          }
+
+          // Sub-band energy ratio
+          let ratioVal = null;
+          if (minSubBandRatio !== null && maxSubBandRatio !== null && spikeSpectrum) {
+            ratioVal = subBandRatio(spikeSpectrum);
+            ratioOk = ratioVal >= minSubBandRatio && ratioVal <= maxSubBandRatio;
+          }
+
+          // Crest factor
+          let crestVal = null;
+          if (minCrest !== null && spikeTimeData) {
+            crestVal = crestFactor(spikeTimeData);
+            crestOk = crestVal >= minCrest;
+          }
+
+          const allPass = spectralOk && flatnessOk && ratioOk && crestOk;
+          console.log(`[Audio] Spike: dur=${spikeDuration}ms, sim=${similarity !== null ? similarity.toFixed(3) : 'N/A'}, flat=${flatVal !== null ? flatVal.toFixed(3) : 'N/A'}, ratio=${ratioVal !== null ? ratioVal.toFixed(2) : 'N/A'}, crest=${crestVal !== null ? crestVal.toFixed(2) : 'N/A'}, result=${allPass ? 'PASS' : 'REJECT'}${!spectralOk ? ' [sim]' : ''}${!flatnessOk ? ' [flat]' : ''}${!ratioOk ? ' [ratio]' : ''}${!crestOk ? ' [crest]' : ''}`);
         }
 
-        if (spikeDuration <= MAX_SPIKE_DURATION && wasQuietAfterLastClap && ambientOk && spectralOk) {
+        if (spikeDuration <= MAX_SPIKE_DURATION && wasQuietAfterLastClap && ambientOk && spectralOk && flatnessOk && ratioOk && crestOk) {
           // This was a sharp, short spike — likely a clap!
           const lastClapTime = clapTimes.length > 0 ? clapTimes[clapTimes.length - 1] : 0;
           const timeSinceLastClap = now - lastClapTime;
@@ -271,10 +363,25 @@ async function startListening() {
   if (settings.spectralTemplate && Array.isArray(settings.spectralTemplate)) {
     spectralTemplate = new Float32Array(settings.spectralTemplate);
     console.log('[Audio] Spectral template loaded (' + spectralTemplate.length + ' bins)');
+    // Validate bin count matches current FFT config
+    if (analyser && spectralTemplate.length !== analyser.frequencyBinCount) {
+      console.log('[Audio] Template bin mismatch (' + spectralTemplate.length + ' vs ' + analyser.frequencyBinCount + ') — re-calibration required');
+      spectralTemplate = null;
+    }
   } else {
     spectralTemplate = null;
     console.log('[Audio] No spectral template — spectral check disabled');
   }
+  // Load adaptive spectral threshold (falls back to hardcoded SPECTRAL_MATCH_THRESHOLD)
+  spectralThreshold = (settings.spectralThreshold && settings.spectralThreshold > 0) ? settings.spectralThreshold : SPECTRAL_MATCH_THRESHOLD;
+
+  // Load acoustic feature thresholds (null = skip that check)
+  minFlatness = (settings.minFlatness != null && settings.minFlatness > 0) ? settings.minFlatness : null;
+  minSubBandRatio = (settings.minSubBandRatio != null) ? settings.minSubBandRatio : null;
+  maxSubBandRatio = (settings.maxSubBandRatio != null) ? settings.maxSubBandRatio : null;
+  minCrest = (settings.minCrest != null && settings.minCrest > 0) ? settings.minCrest : null;
+
+  console.log('[Audio] Thresholds — spectral:', spectralThreshold, '| flatness>=', minFlatness, '| ratio:', minSubBandRatio, '-', maxSubBandRatio, '| crest>=', minCrest);
 
   // Ensure minimum threshold to avoid false triggers from ambient noise
   if (threshold < 0.3) {

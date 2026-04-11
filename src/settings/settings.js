@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let clapCount = 0;
   let calibrationPeaks = [];
   let calibrationSpectra = [];
+  let calibrationFeatures = [];
   let audioAnimationId = null;
   let currentAudioLevel = 0;
 
@@ -58,6 +59,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   });
+
+  // ── Spectral comparison (cosine similarity, 500Hz–8kHz) ────────────────
+  function compareSpectra(a, b, minBin = 23, maxBin = 372) {
+    let dot = 0, normA = 0, normB = 0;
+    const limit = Math.min(maxBin, a.length, b.length);
+    for (let i = minBin; i < limit; i++) {
+      const va = Math.pow(10, a[i] / 20);
+      const vb = Math.pow(10, b[i] / 20);
+      dot += va * vb;
+      normA += va * va;
+      normB += vb * vb;
+    }
+    const divisor = Math.sqrt(normA) * Math.sqrt(normB);
+    return divisor === 0 ? 0 : dot / divisor;
+  }
 
   // ── Constants (must be before init to avoid TDZ) ──────────────────────
 
@@ -296,6 +312,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       clapCount = 0;
       calibrationPeaks = [];
       calibrationSpectra = [];
+      calibrationFeatures = [];
       calibrationIdle.style.display = 'none';
       calibrationDone.style.display = 'none';
       calibrationActive.style.display = 'block';
@@ -330,11 +347,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  window.onix.onCalibrationPeak((peak, spectrum) => {
+  window.onix.onCalibrationPeak((peak, spectrum, features) => {
     if (!calibrating) return;
     clapCount++;
     calibrationPeaks.push(peak);
     if (spectrum) calibrationSpectra.push(spectrum);
+    if (features) calibrationFeatures.push(features);
     updateClapDots();
     calibrationPrompt.textContent = `Clap ${clapCount} of 3 detected!`;
 
@@ -353,9 +371,33 @@ document.addEventListener('DOMContentLoaded', async () => {
           template[i] = vals[1]; // median of 3
         }
         settings.spectralTemplate = template;
-        console.log('[Settings] Spectral template computed (' + binCount + ' bins)');
+        // Compute adaptive threshold from how similar the 3 claps are to the template
+        const sims = calibrationSpectra.map(s => compareSpectra(s, template));
+        const avgSim = sims.reduce((a, b) => a + b, 0) / sims.length;
+        settings.spectralThreshold = Math.round(avgSim * 0.80 * 1000) / 1000;
+        console.log('[Settings] Spectral template computed (' + binCount + ' bins), adaptive threshold: ' + settings.spectralThreshold);
       } else {
         settings.spectralTemplate = null;
+        settings.spectralThreshold = null;
+      }
+
+      // Compute acoustic feature thresholds
+      if (calibrationFeatures.length >= 3) {
+        const flatVals = calibrationFeatures.map(f => f.flatness).filter(v => v != null);
+        const ratioVals = calibrationFeatures.map(f => f.subBandRatio).filter(v => v != null);
+        const crestVals = calibrationFeatures.map(f => f.crest).filter(v => v != null);
+
+        settings.minFlatness = flatVals.length >= 3 ? Math.round(Math.min(...flatVals) * 0.85 * 10000) / 10000 : null;
+        settings.minSubBandRatio = ratioVals.length >= 3 ? Math.round(Math.min(...ratioVals) * 0.7 * 100) / 100 : null;
+        settings.maxSubBandRatio = ratioVals.length >= 3 ? Math.round(Math.max(...ratioVals) * 1.3 * 100) / 100 : null;
+        settings.minCrest = crestVals.length >= 3 ? Math.round(Math.min(...crestVals) * 0.80 * 100) / 100 : null;
+
+        console.log('[Settings] Feature thresholds — flat>=' + settings.minFlatness + ', ratio: ' + settings.minSubBandRatio + '-' + settings.maxSubBandRatio + ', crest>=' + settings.minCrest);
+      } else {
+        settings.minFlatness = null;
+        settings.minSubBandRatio = null;
+        settings.maxSubBandRatio = null;
+        settings.minCrest = null;
       }
 
       newThresholdEl.textContent = newThreshold.toFixed(2);
@@ -444,6 +486,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         windows: [{ url: '', monitor: 1 }],
         threshold: 0.42,
         spectralTemplate: null,
+        spectralThreshold: null,
+        minFlatness: null,
+        minSubBandRatio: null,
+        maxSubBandRatio: null,
+        minCrest: null,
         launchAtLogin: false,
         onboardingComplete: false,
         clapCount: 0
