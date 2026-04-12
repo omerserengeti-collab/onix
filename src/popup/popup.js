@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const settingsBtn = document.getElementById('settingsBtn');
   const waveformCanvas = document.getElementById('waveformCanvas');
 
+  const trialBanner = document.getElementById('trialBanner');
+  const trialText = document.getElementById('trialText');
+
   let threshold = 0.5;
   let currentAudioLevel = 0;
   let waveformAnimId = null;
@@ -17,9 +20,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (settings) {
       threshold = settings.threshold || 0.5;
 
-      // Show paywall if trial exhausted and not licensed
-      if (!settings.licenseValid && settings.trialClapsUsed >= (settings.trialMax || 1)) {
-        showPaywall();
+      if (!settings.licenseValid) {
+        const remaining = (settings.trialMax || 2) - (settings.trialClapsUsed || 0);
+        if (remaining <= 0) {
+          showPaywall();
+        } else {
+          // Show trial counter
+          trialBanner.style.display = 'flex';
+          trialText.textContent = `${remaining} free clap${remaining !== 1 ? 's' : ''} remaining`;
+        }
       }
     }
   } catch (err) {
@@ -145,6 +154,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     setTimeout(() => card.classList.remove('flash'), 300);
   });
 
+  // ── Trial remaining update ──
+  window.onix.onTrialRemaining((remaining) => {
+    if (remaining > 0) {
+      trialBanner.style.display = 'flex';
+      trialText.textContent = `${remaining} free clap${remaining !== 1 ? 's' : ''} remaining`;
+    } else {
+      trialBanner.style.display = 'none';
+    }
+  });
+
   // ── Listening state from main ──
   window.onix.onListeningState((enabled) => {
     toggle.checked = enabled;
@@ -154,6 +173,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── Paywall ──
   function showPaywall() {
     card.style.display = 'none';
+    trialBanner.style.display = 'none';
     paywallCard.style.display = 'block';
     window.onix.resizePopup(380, 520);
   }
@@ -161,6 +181,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function hidePaywall() {
     paywallCard.style.display = 'none';
     card.style.display = 'flex';
+    trialBanner.style.display = 'none';
     window.onix.resizePopup(344, 280);
   }
 

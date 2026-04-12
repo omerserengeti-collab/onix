@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "onix-web",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "/Users/omer/Desktop/onix/web", "-l", "3456", "--no-clipboard"],
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "3456", "-d", "/Users/omer/Desktop/onix/web"],
       "port": 3456
     }
   ]

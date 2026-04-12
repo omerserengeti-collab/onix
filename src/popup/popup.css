@@ -118,6 +118,24 @@ body {
   transform: translateX(20px);
 }
 
+/* ── Trial Banner ── */
+.trial-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(159, 210, 93, 0.08);
+  border: 1px solid rgba(159, 210, 93, 0.2);
+  border-radius: 8px;
+  padding: 6px 12px;
+  margin-bottom: 12px;
+}
+
+.trial-text {
+  font-size: 12px;
+  color: #9FD25D;
+  font-weight: 500;
+}
+
 /* ── Mic Section (hidden when OFF) ── */
 .mic-section {
   border-top: 1px solid #333;

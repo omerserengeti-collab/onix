@@ -1,6 +1,6 @@
 {
   "name": "onix",
-  "version": "1.2.14",
+  "version": "1.2.15",
   "description": "Clap-triggered launcher — menu bar app",
   "main": "main.js",
   "author": "Omer Elias",
@@ -18,14 +18,16 @@
       "target": [
         "dmg"
       ],
-      "identity": "-",
-      "hardenedRuntime": false,
+      "identity": "KIPIT APPLICATIONS LTD (5M77XYJHJ5)",
+      "hardenedRuntime": true,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.inherit.plist",
+      "notarize": true,
       "gatekeeperAssess": false,
       "extendInfo": {
         "NSMicrophoneUsageDescription": "Onix needs microphone access to detect your claps and launch your apps."
       }
     },
-    "afterPack": "./build/afterPack.js",
     "win": {
       "icon": "src/assets/onix.iconset/icon_256x256.png",
       "target": [
@@ -50,7 +52,7 @@
         "height": 380
       },
       "title": "Install Onix",
-      "sign": false
+      "sign": true
     },
     "publish": {
       "provider": "github",

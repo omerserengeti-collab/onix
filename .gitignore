@@ -3,3 +3,5 @@ dist/
 *.dmg
 *.blockmap
 .DS_Store
+DeveloperIDG2CA.cer
+*.cer
