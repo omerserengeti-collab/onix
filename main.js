@@ -201,6 +201,7 @@ function createOnboardingWindow() {
     width: 600,
     height: 650,
     center: true,
+    show: false,
     title: 'Onix Setup',
     resizable: false,
     webPreferences: {
@@ -211,6 +212,19 @@ function createOnboardingWindow() {
   });
 
   onboardingWindow.loadFile(path.join(__dirname, 'src', 'onboarding', 'onboarding.html'));
+
+  // Bring onboarding window to front on first launch
+  onboardingWindow.once('ready-to-show', () => {
+    app.focus({ steal: true });
+    onboardingWindow.show();
+    onboardingWindow.focus();
+    onboardingWindow.setAlwaysOnTop(true);
+    setTimeout(() => {
+      if (onboardingWindow && !onboardingWindow.isDestroyed()) {
+        onboardingWindow.setAlwaysOnTop(false);
+      }
+    }, 1000);
+  });
 
   onboardingWindow.on('closed', () => {
     onboardingWindow = null;

@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const steps = document.querySelectorAll('.step');
   const micDevice = document.getElementById('mic-device');
   const micStatusText = document.getElementById('mic-status-text');
-  const hwStatus = document.getElementById('hw-status');
+  const hwStatus = document.getElementById('hw-status'); // may be null if icon removed
   const musicService = document.getElementById('music-service');
   const musicUrl = document.getElementById('music-url');
   const windowEntries = document.getElementById('window-entries');
@@ -56,8 +56,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Default music URLs (pre-filled, user can clear and type their own) ─
   const defaultUrls = {
-    'spotify': 'spotify:track:39shmbIHICJ2Wxnk1fPSdz',
-    'youtube': 'https://www.youtube.com/watch?v=xMaE6toi4mk',
+    'spotify': 'https://open.spotify.com/track/0hCB0YR03f6AmQaHbwWDe8',
+    'youtube': 'https://www.youtube.com/watch?v=HibBnC6SVk8',
   };
 
   // ── Placeholders per service ───────────────────────────────────────────
@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function initMicDevices() {
     micStatusText.textContent = 'Checking microphone...';
     micStatusText.className = 'mic-status-text checking';
-    hwStatus.textContent = '\u23F3';
+    if (hwStatus) hwStatus.textContent = '\u23F3';
 
     try {
       // Request permission first (triggers the OS prompt)
@@ -207,7 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (audioInputs.length > 0) {
         micStatusText.innerHTML = '\u2705 Microphone OK &mdash; you\'re good to go!';
         micStatusText.className = 'mic-status-text ok';
-        hwStatus.textContent = '\u2705';
+        if (hwStatus) hwStatus.textContent = '\u2705';
 
         // Save initial device selection and tell audio worker
         const deviceId = micDevice.value;
@@ -216,13 +216,13 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         micStatusText.innerHTML = '\u274C No microphone detected';
         micStatusText.className = 'mic-status-text error';
-        hwStatus.textContent = '\u274C';
+        if (hwStatus) hwStatus.textContent = '\u274C';
       }
     } catch (err) {
       console.error('Mic enumeration failed:', err);
       micStatusText.innerHTML = '\u274C No microphone detected';
       micStatusText.className = 'mic-status-text error';
-      hwStatus.textContent = '\u274C';
+      if (hwStatus) hwStatus.textContent = '\u274C';
       micDevice.innerHTML = '<option value="">No access</option>';
     }
   }
@@ -236,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const label = micDevice.options[micDevice.selectedIndex].textContent;
     micStatusText.innerHTML = '\u2705 Using: ' + label;
     micStatusText.className = 'mic-status-text ok';
-    hwStatus.textContent = '\u2705';
+    if (hwStatus) hwStatus.textContent = '\u2705';
   });
 
   // ── Step 2: Music Service — Card Selection ─────────────────────────────
@@ -263,6 +263,10 @@ document.addEventListener('DOMContentLoaded', () => {
       musicUrl.placeholder = servicePlaceholders[service] || 'Paste a URL...';
       songPreview.style.display = 'none';
       musicUrl.value = defaultUrls[service] || '';
+      // Auto-trigger preview for the new default
+      if (musicUrl.value) {
+        setTimeout(() => fetchSongPreview(musicUrl.value.trim()), 300);
+      }
       musicUrl.focus();
     });
   });
@@ -340,8 +344,13 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch {
       displays = [{ id: 1, name: 'Monitor 1', x: 0, y: 0, width: 1920, height: 1080 }];
     }
-    // Seed 1 empty row
+    // Seed with Claude as default
     addWindowEntry();
+    const firstRow = windowEntries.querySelector('.window-entry .entry-url');
+    if (firstRow) firstRow.value = 'https://claude.ai';
+    // Mark Claude quick-pick as selected
+    const claudeBtn = document.querySelector('.quick-pick-btn[data-url="https://claude.ai"]');
+    if (claudeBtn) claudeBtn.classList.add('selected');
     updateRemoveButtons();
   }
 
@@ -657,6 +666,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Pre-fill music URL with default for the initially selected service
   if (!musicUrl.value) {
     musicUrl.value = defaultUrls[musicService.value] || '';
+  }
+  // Auto-trigger song preview for the pre-filled URL
+  if (musicUrl.value) {
+    setTimeout(() => fetchSongPreview(musicUrl.value.trim()), 300);
   }
   initMicDevices();
   initDisplays();

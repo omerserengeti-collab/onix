@@ -78,8 +78,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── Constants (must be before init to avoid TDZ) ──────────────────────
 
   const defaultUrls = {
-    spotify: 'spotify:track:39shmbIHICJ2Wxnk1fPSdz',
-    youtube: 'https://www.youtube.com/watch?v=xMaE6toi4mk',
+    spotify: 'https://open.spotify.com/track/0hCB0YR03f6AmQaHbwWDe8',
+    youtube: 'https://www.youtube.com/watch?v=HibBnC6SVk8',
   };
 
   const placeholders = {

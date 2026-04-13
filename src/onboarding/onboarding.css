@@ -78,20 +78,26 @@ body {
   transform: translateY(-8px);
 }
 
-/* Hero Icon */
-.hero-icon {
-  font-size: 80px;
-  text-align: center;
-  margin-bottom: 12px;
-  line-height: 1;
+/* Hero Waveform Animation */
+.hero-waveform {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 80px;
+  margin: 0 auto 16px;
 }
-.hero-logo {
-  display: block;
-  width: 100px;
-  height: 100px;
-  margin: 0 auto 12px;
-  border-radius: 20px;
-  object-fit: contain;
+
+.hero-waveform .wbar {
+  width: 4px;
+  border-radius: 2px;
+  background: #9FD25D;
+  animation: heroWave 1.2s ease-in-out infinite;
+}
+
+@keyframes heroWave {
+  0%, 100% { height: 4px; opacity: 0.35; }
+  50% { height: var(--h, 30px); opacity: 1; }
 }
 
 /* Step Icon */
