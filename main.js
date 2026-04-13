@@ -6,6 +6,7 @@ const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const { exec } = require('child_process');
 const zlib = require('zlib');
+const { track } = require('./src/analytics');
 // ─── Persistent Settings (initialized after app is ready) ────────────────────
 
 let store = null;
@@ -25,15 +26,15 @@ function initStore() {
       onboardingComplete: false,
       clapCount: 0,
       trialClapsUsed: 0,
-      trialMax: 2,
+      trialMax: 7,
       licenseKey: '',
       licenseValid: false
     }
   });
 
-  // Migration: force trialMax to 2
-  if (store.get('trialMax') !== 2) {
-    store.set('trialMax', 2);
+  // Migration: set trialMax for new users only (don't override existing users)
+  if (store.get('trialMax') === undefined) {
+    store.set('trialMax', 7);
   }
 }
 
@@ -348,7 +349,7 @@ function isLicensed() {
 
 function canUseTrial() {
   const used = store.get('trialClapsUsed', 0);
-  const max = store.get('trialMax', 2);
+  const max = store.get('trialMax', 7);
   return used < max;
 }
 
@@ -423,6 +424,7 @@ function stopSpotifyPolling() {
 }
 
 function launchSequence() {
+  track('launch_triggered');
   const settings = store.store;
   const { music, windows: wins } = settings;
 
@@ -630,6 +632,7 @@ ipcMain.on('finish-onboarding', (_event, settings) => {
     }
   }
   store.set('onboardingComplete', true);
+  track('onboarding_completed');
 
   // Warm up macOS Automation permission for Spotify so the OS prompt appears now, not on first clap
   if (settings && settings.music && settings.music.service === 'spotify') {
@@ -727,6 +730,7 @@ ipcMain.on('audio-level', (_event, volume) => {
 // Clap detected from the audio window
 ipcMain.on('audio-clap', (_event, volume, spectrum, features) => {
   if (isCalibrationMode) {
+    track('calibration_success');
     // During calibration — forward as calibration-peak to onboarding/settings (with spectrum + features)
     if (onboardingWindow && !onboardingWindow.isDestroyed()) {
       onboardingWindow.webContents.send('calibration-peak', volume, spectrum, features);
@@ -736,6 +740,8 @@ ipcMain.on('audio-clap', (_event, volume, spectrum, features) => {
     }
     return;
   }
+
+  track('clap_detected');
 
   // ── Trial / License Gate ──────────────────────────────────────────────
   if (isLicensed()) {
@@ -767,7 +773,7 @@ ipcMain.on('audio-clap', (_event, volume, spectrum, features) => {
     const count = store.get('clapCount', 0) + 1;
     store.set('clapCount', count);
     const trialUsed = store.get('trialClapsUsed', 0);
-    const trialMax = store.get('trialMax', 2);
+    const trialMax = store.get('trialMax', 7);
     const remaining = trialMax - trialUsed;
 
     if (popupWindow && !popupWindow.isDestroyed()) {
@@ -787,6 +793,7 @@ ipcMain.on('audio-clap', (_event, volume, spectrum, features) => {
         console.log('[Onix] Auto-resumed listening (trial claps remaining).');
       } else {
         // All trials used — show paywall
+        track('paywall_shown');
         showTrialExhaustedNotification();
         showingPaywall = true;
         if (popupWindow && !popupWindow.isDestroyed()) {
@@ -801,6 +808,7 @@ ipcMain.on('audio-clap', (_event, volume, spectrum, features) => {
   }
 
   // Trial exhausted and not licensed — popup shows paywall
+  track('paywall_shown');
   stopListening();
   showingPaywall = true;
   if (popupWindow && !popupWindow.isDestroyed()) {
@@ -889,6 +897,7 @@ ipcMain.handle('validate-license', async (_event, key) => {
 });
 
 ipcMain.handle('buy-license', () => {
+  track('purchase_clicked');
   shell.openExternal('https://onixclap.lemonsqueezy.com/checkout/buy/569ae087-31bf-4063-857f-d3ea40f51724');
   return true;
 });
@@ -1030,6 +1039,7 @@ ipcMain.on('install-update', () => {
 
 app.on('ready', async () => {
   console.log('[Onix] App ready');
+  track('app_opened');
 
   // Initialize settings store
   initStore();
@@ -1092,6 +1102,7 @@ app.on('ready', async () => {
     // First launch — show onboarding wizard
     createTray();
     createOnboardingWindow();
+    track('onboarding_started');
   }
 });
 

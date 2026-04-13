@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       threshold = settings.threshold || 0.5;
 
       if (!settings.licenseValid) {
-        const remaining = (settings.trialMax || 2) - (settings.trialClapsUsed || 0);
+        const remaining = (settings.trialMax || 7) - (settings.trialClapsUsed || 0);
         if (remaining <= 0) {
           showPaywall();
         } else {
